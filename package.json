@@ -1,0 +1,31 @@
+{
+    "name": "unified-portal-runner",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "install:all": "npm install && npm install --prefix Barcode-1 && npm install --prefix \"Legal mapping\" && npm install --prefix \"legal pro/AI Legal Portal\" && npm install --prefix dashboard",
+        "dev:barcode": "npm run dev --prefix Barcode-1",
+        "dev:mapping": "npm run dev --prefix \"Legal mapping\"",
+        "dev:ai": "npm run dev --prefix \"legal pro/AI Legal Portal\"",
+        "dev:dashboard": "npm run dev --prefix dashboard",
+        "dev:backend": "python backend/main.py",
+        "dev:all": "concurrently \"npm run dev:barcode\" \"npm run dev:mapping\" \"npm run dev:ai\" \"npm run dev:dashboard\" \"npm run dev:backend\"",
+        "dev": "npm run dev:all"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4.1.18",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "autoprefixer": "^10.4.24",
+        "concurrently": "^8.2.2",
+        "postcss": "^8.5.6",
+        "tailwindcss": "^4.1.18"
+    },
+    "dependencies": {
+        "@tiptap/extension-image": "^3.19.0",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.574.0",
+        "react-router-dom": "^7.13.0",
+        "tailwind-merge": "^3.4.1"
+    }
+}
