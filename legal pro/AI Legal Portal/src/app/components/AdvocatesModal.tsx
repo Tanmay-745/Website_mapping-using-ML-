@@ -368,7 +368,7 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
                             <div className="h-[300px] overflow-hidden rounded-md border border-input">
                                 <TemplateEditor
                                     content={formData.bio}
-                                    onChange={(content) => setFormData({ ...formData, bio: content })}
+                                    onChange={(content) => setFormData(prev => ({ ...prev, bio: content }))}
                                     variables={[]}
                                     onInsertVariable={() => { }}
                                 />

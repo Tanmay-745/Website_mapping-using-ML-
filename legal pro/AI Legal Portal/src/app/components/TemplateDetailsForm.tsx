@@ -78,13 +78,13 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Template Details</h2>
-        <p className="text-slate-600">
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Template Details</h2>
+        <p className="text-slate-600 dark:text-gray-400">
           Configure the details for your {noticeTypeNames[noticeType!]} template
         </p>
       </div>
 
-      <Card className="p-8 max-w-3xl">
+      <Card className="p-8 max-w-3xl bg-white/50 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="templateName">Template Name *</Label>

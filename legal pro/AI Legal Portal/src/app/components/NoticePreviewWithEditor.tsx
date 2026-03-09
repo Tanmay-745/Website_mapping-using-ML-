@@ -17,6 +17,8 @@ import {
 } from "./ui/select";
 import { Label } from "./ui/label";
 import { Languages } from "lucide-react";
+// @ts-ignore
+import html2pdf from "html2pdf.js";
 
 interface NoticePreviewProps {
   templateData: TemplateData;
@@ -32,12 +34,15 @@ const noticeTypeNames = {
 
 // Generate initial template content
 function generateInitialContent(templateData: TemplateData): string {
-  const { noticeType, lender, advocate, selectedVariables } = templateData;
+  const { noticeType, lender, advocate, selectedVariables, advocateDetails } = templateData;
   const date = new Date().toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
+
+
+
 
   const getVar = (possibleNames: string[]) => {
     for (const name of possibleNames) {
@@ -228,9 +233,16 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
   });
 
   const [currentLanguage, setCurrentLanguage] = useState("English");
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Get current content based on selected language
   const currentContent = contentMap[currentLanguage] || "";
+
+  // Advocate branding for preview and printing
+  const advocateDetails = templateData.advocateDetails;
+  const headerHtml = advocateDetails?.bio ? `<div style="margin-bottom: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem;" class="preview-header">${advocateDetails.bio}</div><style>.preview-header img { max-width: 100%; height: auto; }</style>\n` : '';
+  const signatureHtml = advocateDetails?.signature ? `<div style="margin-top: 2rem;"><img src="${advocateDetails.signature}" alt="${templateData.advocate} Signature" style="max-height: 80px; object-fit: contain;" /></div>\n` : '';
+  const fullPreviewContent = `${headerHtml}${currentContent}${signatureHtml}`;
 
   // Update content for the CURRENT language
   const handleContentChange = (newContent: string) => {
@@ -239,6 +251,8 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
       [currentLanguage]: newContent
     }));
   };
+
+
 
   const handleSaveTemplate = () => {
     // Create template object
@@ -272,18 +286,99 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
     onStartNew(); // Redirect to Saved Templates portal
   };
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    if (printWindow) {
-      printWindow.document.write('<html><head><title>Legal Notice</title>');
-      printWindow.document.write('<style>body{font-family: Arial, sans-serif; padding: 40px; line-height: 1.6;} h1{text-align: center;} hr{margin: 20px 0;}</style>');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write(currentContent);
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.print();
+  const handleDownloadPdf = async () => {
+    setIsGeneratingPdf(true);
+    const toastId = toast.loading("Generating PDF document...");
+    try {
+      const container = document.createElement("div");
+      container.innerHTML = fullPreviewContent;
+      // Add printable CSS to the off-screen element
+      const style = document.createElement("style");
+      style.innerHTML = `body{font-family: Arial, sans-serif; padding: 40px; line-height: 1.6;} h1{text-align: center;} hr{margin: 20px 0;} img { max-width: 100%; height: auto; }`;
+      container.prepend(style);
+
+      const opt = {
+        margin: 10,
+        filename: `${templateData.noticeType || 'notice'}_${Date.now()}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4' as const, orientation: 'portrait' as const }
+      };
+
+      await html2pdf().from(container).set(opt).save();
+      toast.success("PDF downloaded successfully!", { id: toastId });
+    } catch (e) {
+      toast.error("Failed to generate PDF", { id: toastId });
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
+
+  const handlePrint = () => {
+    // Create an invisible iframe for printing
+    const printIframe = document.createElement('iframe');
+    printIframe.style.position = 'absolute';
+    printIframe.style.width = '0px';
+    printIframe.style.height = '0px';
+    printIframe.style.border = 'none';
+    document.body.appendChild(printIframe);
+
+    const printDocument = printIframe.contentWindow?.document;
+    if (printDocument) {
+      const htmlContent = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Legal Notice Preview</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 40px;
+        line-height: 1.6;
+        color: #000;
+        max-width: 210mm;
+        margin: 0 auto;
+      }
+      h1, h2, h3 { text-align: center; }
+      p { margin-bottom: 1em; }
+      hr { margin: 20px 0; border: none; border-top: 1px solid #ccc; }
+      img { max-width: 100%; height: auto; }
+      /* Ensure text styling matches editor */
+      strong, b { font-weight: bold; }
+      em, i { font-style: italic; }
+      ul, ol { padding-left: 2em; margin-bottom: 1em; }
+      ul { list-style-type: disc; }
+      ol { list-style-type: decimal; }
+      
+      @media print {
+        body { padding: 0; max-width: none; }
+        @page { margin: 20mm; }
+      }
+    </style>
+  </head>
+  <body>
+    ${fullPreviewContent}
+  </body>
+</html>`;
+      printDocument.open();
+      // Writing the entire HTML at once to prevent parsing bugs
+      printDocument.write(htmlContent);
+      printDocument.close();
+
+      // Give the browser time to render the DOM and images
+      setTimeout(() => {
+        printIframe.contentWindow?.focus();
+        printIframe.contentWindow?.print();
+
+        // Clean up the iframe after print dialog is closed
+        setTimeout(() => {
+          document.body.removeChild(printIframe);
+        }, 1000);
+      }, 500);
+    } else {
+      toast.error('Unable to open print preview. Please try again.');
+    }
+  };
+
 
   const handleInsertVariable = (variable: string) => {
     toast.info(`Variable \${${variable}} inserted (cursor support pending in editor)`);
@@ -294,35 +389,35 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Edit Template</h2>
-        <p className="text-slate-600">
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Edit Template</h2>
+        <p className="text-slate-600 dark:text-gray-400">
           Customize your legal notice template with rich text editing
         </p>
       </div>
 
       {/* Template Info */}
-      <Card className="p-6 mb-6">
+      <Card className="p-6 mb-6 bg-white/50 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <p className="text-sm text-slate-600 mb-1">Notice Type</p>
-            <p className="font-semibold text-slate-900">
+            <p className="text-sm text-slate-600 dark:text-gray-400 mb-1">Notice Type</p>
+            <p className="font-semibold text-slate-900 dark:text-white">
               {noticeTypeNames[templateData.noticeType!]}
             </p>
           </div>
           <div>
-            <p className="text-sm text-slate-600 mb-1">Template Name</p>
-            <p className="font-semibold text-slate-900">{templateData.templateName}</p>
+            <p className="text-sm text-slate-600 dark:text-gray-400 mb-1">Template Name</p>
+            <p className="font-semibold text-slate-900 dark:text-white">{templateData.templateName}</p>
           </div>
           <div>
-            <p className="text-sm text-slate-600 mb-1">Delivery Mode</p>
-            <Badge variant={templateData.deliveryMode === "digital" ? "default" : "secondary"}>
+            <p className="text-sm text-slate-600 dark:text-gray-400 mb-1">Delivery Mode</p>
+            <Badge variant={templateData.deliveryMode === "digital" ? "default" : "secondary"} className="dark:bg-gray-700 dark:text-gray-200">
               {templateData.deliveryMode === "digital" ? <Mail className="w-3 h-3 mr-1" /> : <Printer className="w-3 h-3 mr-1" />}
               {templateData.deliveryMode === "digital" ? "Digital" : "Physical"}
             </Badge>
           </div>
           <div>
-            <p className="text-sm text-slate-600 mb-1">Variables</p>
-            <p className="font-semibold text-slate-900">
+            <p className="text-sm text-slate-600 dark:text-gray-400 mb-1">Variables</p>
+            <p className="font-semibold text-slate-900 dark:text-white">
               {templateData.selectedVariables.length} selected
             </p>
           </div>
@@ -330,9 +425,9 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
       </Card>
 
       {/* Editor / Preview Tabs */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-white/50 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50">
         <Tabs value={isEditing ? "edit" : "preview"} onValueChange={(v) => setIsEditing(v === "edit")}>
-          <div className="border-b border-slate-200 px-6 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="border-b border-slate-200 dark:border-gray-700/50 px-6 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <TabsList>
               <TabsTrigger value="edit" className="flex items-center gap-2">
                 <Edit3 className="w-4 h-4" />
@@ -346,7 +441,7 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
             {/* Language Switcher - ALWAYS VISIBLE in both modes */}
             <div className="flex items-center gap-2 mb-2 sm:mb-0">
-              <Label className="text-sm font-medium text-slate-600">Language:</Label>
+              <Label className="text-sm font-medium text-slate-600 dark:text-gray-300">Language:</Label>
               <div className="w-[140px]">
                 <Select value={currentLanguage} onValueChange={(lang) => {
                   // Check if language exists, if not, maybe initialize it?
@@ -380,10 +475,10 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
           <TabsContent value="edit" className="p-6">
             <div className="mb-4">
-              <div className="flex flex-col gap-4 mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex flex-col gap-4 mb-4 p-4 bg-slate-50 dark:bg-gray-900/50 rounded-lg border border-slate-200 dark:border-gray-700/50">
                 <div>
-                  <h4 className="font-semibold text-sm text-slate-700 mb-2 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
+                  <h4 className="font-semibold text-sm text-slate-700 dark:text-gray-200 mb-2 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     AI Assistant
                   </h4>
                 </div>
@@ -393,7 +488,7 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/40"
                     onClick={async () => {
                       const toastId = toast.loading(`Generating ${currentLanguage} content...`);
                       try {
@@ -424,7 +519,7 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                      className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-900 dark:hover:bg-indigo-900/40"
                       onClick={async () => {
                         const sourceLang = "English";
                         const sourceContent = contentMap[sourceLang];
@@ -477,14 +572,17 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
           </TabsContent>
 
           <TabsContent value="preview" className="p-6">
-            <div className="border border-slate-200 rounded-lg p-8 bg-white min-h-[500px]">
+            <div className="bg-slate-100 dark:bg-gray-900/30 rounded-lg p-4 sm:p-8 flex justify-center overflow-x-auto min-h-[500px]">
               {currentContent ? (
-                <div
-                  className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: currentContent }}
-                />
+                <div className="bg-white shadow-lg w-[210mm] min-h-[297mm] p-[20mm] origin-top shrink-0">
+                  <div
+                    className="prose prose-sm max-w-none text-black"
+                    style={{ fontFamily: "Arial, sans-serif", lineHeight: "1.6" }}
+                    dangerouslySetInnerHTML={{ __html: fullPreviewContent }}
+                  />
+                </div>
               ) : (
-                <div className="text-center text-slate-400 py-20 italic">
+                <div className="text-center text-slate-400 dark:text-gray-500 py-20 italic bg-white dark:bg-gray-800 w-full rounded-lg border border-slate-200 dark:border-gray-700">
                   No content for {currentLanguage}. Switch to Edit mode to add content.
                 </div>
               )}
@@ -508,6 +606,14 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
         >
           <Printer className="w-4 h-4 mr-2" />
           Print Preview ({currentLanguage})
+        </Button>
+        <Button
+          onClick={handleDownloadPdf}
+          variant="outline"
+          disabled={isGeneratingPdf || !currentContent}
+        >
+          <FileText className="w-4 h-4 mr-2" />
+          {isGeneratingPdf ? "Generating..." : "Download as PDF"}
         </Button>
         <Button
           onClick={onStartNew}

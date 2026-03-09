@@ -1,0 +1,25 @@
+{
+    "name": "cover-letter-generator",
+    "version": "1.0.0",
+    "description": "Bulk cover letter generator using puppeteer and canvas",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "node index.js"
+    },
+    "dependencies": {
+        "axios": "^1.13.6",
+        "bwip-js": "^4.7.0",
+        "csv-parser": "^3.2.0",
+        "ejs": "^3.1.10",
+        "express": "^5.1.0",
+        "multer": "^2.0.2",
+        "pdf-lib": "^1.17.1",
+        "pdf2json": "^4.0.2",
+        "puppeteer": "^24.16.0",
+        "xlsx": "^0.18.5"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

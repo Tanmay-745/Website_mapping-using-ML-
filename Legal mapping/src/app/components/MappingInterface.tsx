@@ -84,15 +84,15 @@ export function MappingInterface({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-md">
               <Check className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Column Mapping</h2>
-              <p className="text-sm text-gray-600">File: <span className="font-medium text-blue-600">{fileName}</span></p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Column Mapping</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">File: <span className="font-medium text-blue-600 dark:text-blue-400">{fileName}</span></p>
             </div>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full">
@@ -105,26 +105,26 @@ export function MappingInterface({
           {mappings.map((mapping, index) => (
             <div
               key={index}
-              className="group flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 rounded-xl transition-all duration-300 border border-gray-200/50 hover:border-blue-300/50 hover:shadow-md"
+              className="group flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 dark:from-gray-800/50 dark:to-blue-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 rounded-xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 hover:border-blue-300/50 dark:hover:border-blue-600/50 hover:shadow-md"
             >
               {/* Source Header */}
               <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block uppercase tracking-wide">
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wide">
                   Source Column
                 </label>
-                <div className="px-4 py-2.5 bg-white border border-gray-300 rounded-lg font-medium text-gray-900 shadow-sm">
+                <div className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-900 dark:text-gray-200 shadow-sm">
                   {mapping.sourceHeader}
                 </div>
               </div>
 
               {/* Arrow */}
               <div className="flex-shrink-0 mt-6">
-                <ArrowRight className="w-5 h-5 text-blue-500 group-hover:text-purple-600 transition-colors group-hover:translate-x-1 duration-300" />
+                <ArrowRight className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors group-hover:translate-x-1 duration-300" />
               </div>
 
               {/* Target Header Dropdown or Input */}
               <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block uppercase tracking-wide">
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wide">
                   Target Column
                 </label>
                 {editingIndex === index ? (
@@ -137,7 +137,7 @@ export function MappingInterface({
                         if (e.key === 'Enter') handleSaveEdit(index);
                         if (e.key === 'Escape') handleCancelEdit();
                       }}
-                      className="flex-1 px-4 py-2.5 bg-white border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm"
+                      className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-blue-500 dark:border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm dark:text-gray-100"
                       autoFocus
                     />
                     <button
@@ -148,7 +148,7 @@ export function MappingInterface({
                     </button>
                     <button
                       onClick={handleCancelEdit}
-                      className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                      className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
                     >
                       Cancel
                     </button>
@@ -163,7 +163,7 @@ export function MappingInterface({
                           e.target.value === '' ? null : e.target.value
                         )
                       }
-                      className="flex-1 px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm font-medium"
+                      className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm font-medium dark:text-gray-100"
                     >
                       <option value="">-- Skip Column --</option>
                       {filteredHeaders.map((header, headerIdx) => (
@@ -177,7 +177,7 @@ export function MappingInterface({
                         onClick={() =>
                           handleStartEdit(index, mapping.targetHeader!)
                         }
-                        className="px-3 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-600 transition-all duration-300 flex items-center gap-1 shadow-sm hover:shadow-md"
+                        className="px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 flex items-center gap-1 shadow-sm hover:shadow-md"
                         title="Rename target column"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -198,7 +198,7 @@ export function MappingInterface({
                     {getConfidenceLabel(mapping.confidence)}
                   </span>
                 ) : (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border-2 border-gray-200">
+                  <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-600">
                     Skipped
                   </span>
                 )}
@@ -215,14 +215,14 @@ export function MappingInterface({
 
       {/* Add Custom Column */}
       {showAddColumn ? (
-        <div className="bg-white/80 backdrop-blur-sm border border-blue-200 rounded-2xl p-6 shadow-lg">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200 dark:border-blue-900/50 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
               <Plus className="w-5 h-5 text-white" />
             </div>
-            <p className="font-semibold text-gray-900">Add Custom Column(s)</p>
+            <p className="font-semibold text-gray-900 dark:text-white">Add Custom Column(s)</p>
           </div>
-          <p className="text-sm text-gray-600 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800/30">
             💡 Tip: Enter one or more column names separated by commas (e.g., "column1, column2, column3")
           </p>
           <div className="flex gap-3">
@@ -270,7 +270,7 @@ export function MappingInterface({
       )}
 
       {/* Manage Target Columns */}
-      <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
         <button
           onClick={() => setShowManageColumns(!showManageColumns)}
           className="w-full flex items-center justify-between group"
@@ -278,19 +278,19 @@ export function MappingInterface({
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg transition-all duration-300 ${showManageColumns
               ? 'bg-gradient-to-br from-purple-500 to-pink-600 shadow-md'
-              : 'bg-gray-100 group-hover:bg-purple-100'
+              : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40'
               }`}>
               <Settings className={`w-5 h-5 transition-all duration-300 ${showManageColumns
                 ? 'text-white rotate-90'
-                : 'text-gray-600 group-hover:text-purple-600 group-hover:rotate-45'
+                : 'text-gray-600 dark:text-gray-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:rotate-45'
                 }`} />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Manage Target Columns</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Manage Target Columns</h3>
           </div>
           <div className="flex items-center gap-2">
             <span className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${showManageColumns
-              ? 'bg-purple-100 text-purple-700'
-              : 'bg-gray-100 text-gray-600'
+              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
               }`}>
               {availableTargetHeaders.length} available
             </span>
@@ -301,8 +301,8 @@ export function MappingInterface({
         </button>
 
         {showManageColumns && (
-          <div className="space-y-4 mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+          <div className="space-y-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-100 dark:border-amber-800/30">
               ⚠️ Delete columns you don't need from the available target headers
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -312,13 +312,13 @@ export function MappingInterface({
               ).map((header, idx) => (
                 <div
                   key={`builtin-${header}-${idx}`}
-                  className="group/item flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md"
+                  className="group/item flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 dark:from-gray-800/50 dark:to-blue-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 shadow-sm hover:shadow-md"
                 >
-                  <span className="text-sm font-medium text-gray-900">{header}</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-200">{header}</span>
                   {onDeleteColumn && (
                     <button
                       onClick={() => onDeleteColumn(header)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover/item:opacity-100 hover:scale-110"
+                      className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all opacity-0 group-hover/item:opacity-100 hover:scale-110"
                       title="Delete column"
                     >
                       <Trash2 className="w-4 h-4" />

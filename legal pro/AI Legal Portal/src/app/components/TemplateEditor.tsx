@@ -1,31 +1,19 @@
-import React, { useEffect } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
-import { Button } from './ui/button';
+import React, { useRef, useId, useMemo } from "react";
+import ReactQuill, { Quill } from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
+// Register Custom Sizes
+const Size = Quill.import('attributors/style/size');
+Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px', '36px'];
+Quill.register(Size, true);
+
 import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  List,
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Heading3,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Code,
-  Quote,
-  Undo,
-  Redo,
-  Type,
-  Image as ImageIcon
-} from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Separator } from './ui/separator';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "./ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 interface TemplateEditorProps {
   content: string;
@@ -34,222 +22,180 @@ interface TemplateEditorProps {
   onInsertVariable: (variable: string) => void;
 }
 
-export function TemplateEditor({ content, onChange, variables, onInsertVariable }: TemplateEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Start writing your legal notice here...',
-      }),
-      Image,
-    ],
-    content,
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
-    },
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[500px] p-6',
-      },
-    },
-  });
+export function TemplateEditor({
+  content,
+  onChange,
+  variables,
+  onInsertVariable
+}: TemplateEditorProps) {
 
-  if (!editor) {
-    return null;
-  }
+  const quillRef = useRef<ReactQuill | null>(null);
 
-  // Sync content when prop changes (external updates)
-  React.useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      // Only set content if it's actually different to avoid cursor jumps / loops
-      // We check if the content is plausibly the same (Tiptap HTML serialization might vary slightly)
-      // For now, strict check. If saving/loading, this ensures what's passed in is displayed.
-      editor.commands.setContent(content);
+  // Uniquely identify the toolbar for this specific editor instance
+  const idPrefix = useId().replace(/:/g, "");
+  const toolbarId = `toolbar-${idPrefix}`;
+
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: `#${toolbarId}`
     }
-  }, [content, editor]);
+  }), [toolbarId]);
 
+  // Insert Variable
   const insertVariable = (variable: string) => {
-    editor.chain().focus().insertContent(`\${${variable}}`).run();
+    const editor = quillRef.current?.getEditor();
+    if (!editor) return;
+
+    editor.focus();
+    const range = editor.getSelection();
+    if (range) {
+      editor.insertText(range.index, `\${${variable}}`);
+    } else {
+      const length = editor.getLength();
+      editor.insertText(length, `\${${variable}}`);
+    }
+
     onInsertVariable(variable);
   };
 
-  const addImage = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (readerEvent) => {
-          const content = readerEvent.target?.result as string;
-          if (content) {
-            editor.chain().focus().setImage({ src: content }).run();
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
-  };
-
   return (
-    <div className="border border-slate-300 rounded-lg overflow-hidden bg-white">
-      {/* Toolbar */}
-      <div className="bg-slate-50 border-b border-slate-300 p-2 flex flex-wrap items-center gap-1">
-        {/* Text Formatting */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={editor.isActive('bold') ? 'bg-slate-200' : ''}
-          title="Bold"
-        >
-          <Bold className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={editor.isActive('italic') ? 'bg-slate-200' : ''}
-          title="Italic"
-        >
-          <Italic className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          className={editor.isActive('code') ? 'bg-slate-200' : ''}
-          title="Code"
-        >
-          <Code className="w-4 h-4" />
-        </Button>
+    <div className="border border-slate-300 rounded-lg overflow-hidden bg-white flex flex-col quill-custom-container">
+      {/* Custom HTML Toolbar integrated directly with Quill */}
+      <div id={toolbarId}>
+        <span className="ql-formats">
+          <button className="ql-bold"></button>
+          <button className="ql-italic"></button>
+          <button className="ql-underline"></button>
+          <button className="ql-strike"></button>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-blockquote"></button>
+          <button className="ql-code-block"></button>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-header" value="1"></button>
+          <button className="ql-header" value="2"></button>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-list" value="ordered"></button>
+          <button className="ql-list" value="bullet"></button>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-script" value="sub"></button>
+          <button className="ql-script" value="super"></button>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-indent" value="-1"></button>
+          <button className="ql-indent" value="+1"></button>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-direction" value="rtl"></button>
+        </span>
+        <span className="ql-formats">
+          <select className="ql-size" defaultValue="14px">
+            <option value="10px">10px</option>
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px">16px</option>
+            <option value="18px">18px</option>
+            <option value="20px">20px</option>
+            <option value="24px">24px</option>
+            <option value="30px">30px</option>
+            <option value="36px">36px</option>
+          </select>
+        </span>
+        <span className="ql-formats">
+          <select className="ql-header">
+            <option value="1"></option>
+            <option value="2"></option>
+            <option value="3"></option>
+            <option value="4"></option>
+            <option value="5"></option>
+            <option value="6"></option>
+            <option selected></option>
+          </select>
+        </span>
+        <span className="ql-formats">
+          <select className="ql-font">
+            <option selected></option>
+            <option value="serif"></option>
+            <option value="monospace"></option>
+          </select>
+        </span>
+        <span className="ql-formats">
+          <select className="ql-color"></select>
+          <select className="ql-background"></select>
+        </span>
+        <span className="ql-formats">
+          <select className="ql-align"></select>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-clean"></button>
+        </span>
+        <span className="ql-formats">
+          <button className="ql-image"></button>
+          <button className="ql-link"></button>
+          <button className="ql-video"></button>
+        </span>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* Headings */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="sm" title="Text Style">
-              <Type className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setParagraph().run()}>
-              Normal
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-              Heading 1
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-              Heading 2
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-              Heading 3
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* Lists */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={editor.isActive('bulletList') ? 'bg-slate-200' : ''}
-          title="Bullet List"
-        >
-          <List className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive('orderedList') ? 'bg-slate-200' : ''}
-          title="Numbered List"
-        >
-          <ListOrdered className="w-4 h-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* Blockquote */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={editor.isActive('blockquote') ? 'bg-slate-200' : ''}
-          title="Quote"
-        >
-          <Quote className="w-4 h-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* Undo/Redo */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().undo().run()}
-          title="Undo"
-        >
-          <Undo className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().redo().run()}
-          title="Redo"
-        >
-          <Redo className="w-4 h-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* Variables Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button type="button" variant="outline" size="sm">
-              Insert Variable
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="max-h-64 overflow-y-auto">
-            {variables.length > 0 ? (
-              variables.map((variable) => (
-                <DropdownMenuItem
-                  key={variable}
-                  onClick={() => insertVariable(variable)}
-                >
-                  {variable}
+        {/* Variables Dropdown integrated seamlessly into the toolbar */}
+        <span className="ql-formats float-none xl:float-right inline-flex">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="!w-auto !px-[10px] text-[13px] text-[#444] hover:text-[#06c] flex items-center gap-[4px] h-[24px] focus:outline-none focus:ring-0 leading-none align-middle"
+                style={{ width: 'auto', paddingLeft: '8px', paddingRight: '8px' }}
+                title="Insert Variable"
+              >
+                Variables <ChevronDown className="w-3 h-3 h-full pb-[2px]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="max-h-64 overflow-y-auto w-48 mt-1">
+              {variables.length > 0 ? (
+                variables.map((variable) => (
+                  <DropdownMenuItem
+                    key={variable}
+                    onClick={() => insertVariable(variable)}
+                  >
+                    {variable}
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem disabled>
+                  No variables available
                 </DropdownMenuItem>
-              ))
-            ) : (
-              <DropdownMenuItem disabled>No variables available</DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Image Upload */}
-        <Button type="button" variant="outline" size="sm" onClick={addImage}>
-          <ImageIcon className="w-4 h-4 mr-2" />
-          Upload Image
-        </Button>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </span>
       </div>
 
-      {/* Editor Content */}
-      <div className="bg-white">
-        <EditorContent editor={editor} />
-      </div>
+      {/* Editor component */}
+      <ReactQuill
+        ref={quillRef}
+        theme="snow"
+        value={content}
+        onChange={onChange}
+        modules={modules}
+        placeholder="Start writing your legal notice here..."
+        className="min-h-[500px]"
+      />
+
+      <style>{`
+        .quill-custom-container .ql-toolbar {
+          border-top: none;
+          border-left: none;
+          border-right: none;
+          background-color: #f8fafc;
+        }
+        .quill-custom-container .ql-container {
+          border-left: none;
+          border-right: none;
+          border-bottom: none;
+          min-height: 500px;
+        }
+      `}</style>
     </div>
   );
 }

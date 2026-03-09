@@ -50,8 +50,8 @@ export function CSVUploader({ onFileUpload }: CSVUploaderProps) {
   return (
     <div
       className={`relative border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 overflow-hidden ${isDragging
-          ? 'border-blue-400 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 scale-105 shadow-2xl'
-          : 'border-gray-300 bg-white hover:border-blue-300 hover:shadow-xl'
+        ? 'border-blue-400 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/40 dark:via-purple-900/40 dark:to-pink-900/40 scale-105 shadow-2xl'
+        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 backdrop-blur-sm hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-xl'
         }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -62,24 +62,24 @@ export function CSVUploader({ onFileUpload }: CSVUploaderProps) {
 
       <div className="relative flex flex-col items-center gap-6">
         <div className={`relative p-6 rounded-full transition-all duration-300 ${isDragging
-            ? 'bg-gradient-to-br from-blue-500 to-purple-600 scale-110 shadow-lg'
-            : 'bg-gradient-to-br from-blue-100 to-purple-100 hover:scale-105'
+          ? 'bg-gradient-to-br from-blue-500 to-purple-600 scale-110 shadow-lg'
+          : 'bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 hover:scale-105'
           }`}>
           {isDragging ? (
             <>
               <FileSpreadsheet className="w-16 h-16 text-white animate-pulse" />
-              <Sparkles className="w-6 h-6 text-yellow-300 absolute -top-2 -right-2 animate-bounce" />
+              <Sparkles className="w-6 h-6 text-yellow-500 dark:text-yellow-300 absolute -top-2 -right-2 animate-bounce" />
             </>
           ) : (
-            <Upload className="w-16 h-16 text-blue-600" />
+            <Upload className="w-16 h-16 text-blue-600 dark:text-blue-400" />
           )}
         </div>
 
         <div className="space-y-3">
-          <p className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <p className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
             {isDragging ? 'Drop your file here!' : 'Upload your CSV or Excel file'}
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Drag & drop your file here, or click to browse
           </p>
           <div className="flex items-center gap-3 justify-center text-xs text-gray-400">

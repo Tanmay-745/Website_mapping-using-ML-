@@ -8,6 +8,7 @@ export function useCSVMapping() {
     const [mappings, setMappings] = useState<HeaderMapping[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isPhysical, setIsPhysical] = useState(false);
+    const [physicalLenderName, setPhysicalLenderName] = useState<string>('');
     const [isConsolidated, setIsConsolidated] = useState(false);
     const [customTargetHeaders, setCustomTargetHeaders] = useState<string[]>(() => {
         if (typeof window !== 'undefined') {
@@ -217,6 +218,13 @@ export function useCSVMapping() {
                     // Skip the phone number column itself from pivoting
                     if (header === phoneMapping.sourceHeader) return;
 
+                    // If a column is explicitly skipped (mapped to null), ignore it from pivoting logic
+                    const mapping = mappings.find(m => m.sourceHeader === header);
+                    if (mapping && mapping.targetHeader === null) return;
+
+                    // 'sno' column should not be pivoted into multiple columns
+                    const isSno = header.toLowerCase() === 'sno' || header.toLowerCase() === 's.no' || header.toLowerCase() === 'sr no' || header.toLowerCase() === 'serial number';
+
                     const values = groupRows
                         .map(r => r[header])
                         .filter(v => v !== undefined && v !== null && String(v).trim() !== '');
@@ -224,8 +232,12 @@ export function useCSVMapping() {
 
                     // Only count unique non-empty values
                     if (uniqueValues.length > 0) {
-                        if (uniqueValues.length > (columnPivotCounts[header] || 0)) {
-                            columnPivotCounts[header] = uniqueValues.length;
+                        let potentialCount = uniqueValues.length;
+                        // Force max pivot count to 1 for sno columns so they don't spawn sno 2, sno 3
+                        if (isSno) potentialCount = 1;
+
+                        if (potentialCount > (columnPivotCounts[header] || 0)) {
+                            columnPivotCounts[header] = potentialCount;
                         }
                     }
                 });
@@ -311,11 +323,29 @@ export function useCSVMapping() {
                 consolidatedRows.push(baseRow);
             });
 
-            data = consolidatedRows;
+            // Assign sequential 'sno' values after consolidation
+            let currentSno = 1;
+            const finalConsolidatedRows = consolidatedRows.map(row => {
+                const newRow = { ...row };
+                // Find keys that correspond to 'sno'
+                Object.keys(newRow).forEach(key => {
+                    if (key.toLowerCase() === 'sno' || key.toLowerCase() === 's.no' || key.toLowerCase() === 'sr no' || key.toLowerCase() === 'serial number') {
+                        newRow[key] = currentSno;
+                    }
+                });
+                currentSno++;
+                return newRow;
+            });
+
+            data = finalConsolidatedRows;
 
             // Update headers to include new pivoted columns
             const newHeaders: string[] = [];
             headers.forEach(header => {
+                // If the column is marked skipped, it should not appear
+                const mapping = mappings.find(m => m.sourceHeader === header);
+                if (mapping && mapping.targetHeader === null) return;
+
                 const count = columnPivotCounts[header] || 0;
 
                 if (count > 1) {
@@ -692,7 +722,7 @@ export function useCSVMapping() {
 
                                             // Get aggregated LANs
                                             const lanStr = phoneToLanMap[phone] ? Array.from(phoneToLanMap[phone]).join(', ') : '';
-                                            updates.push({ id: bc.id, lenderName: phone, lan: lanStr });
+                                            updates.push({ id: bc.id, lenderName: phone, lan: lanStr, bankName: physicalLenderName });
                                         }
                                     }
                                     // If already mapped, no need to push another update (it's the same barcode)
@@ -700,7 +730,7 @@ export function useCSVMapping() {
                                     // No phone
                                     if (nextBarcodeIdx < barcodes.length) {
                                         const bc = barcodes[nextBarcodeIdx++];
-                                        updates.push({ id: bc.id, lenderName: 'Unknown' });
+                                        updates.push({ id: bc.id, lenderName: 'Unknown', bankName: physicalLenderName });
                                     }
                                 }
                             });
@@ -713,7 +743,14 @@ export function useCSVMapping() {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ action: 'markUsed', updates })
-                                }).catch(err => console.error("Failed to sync barcodes", err));
+                                })
+                                    .then(() => {
+                                        // Successfully marked in backend, tell dashboard to reload Barcode Portal
+                                        if (typeof window !== 'undefined') {
+                                            window.parent.postMessage({ type: 'RELOAD_APP', appId: 'barcode' }, '*');
+                                        }
+                                    })
+                                    .catch(err => console.error("Failed to sync barcodes", err));
                             }
                         }
                     })
@@ -729,7 +766,7 @@ export function useCSVMapping() {
         if (!isPhysical) {
             setFetchedBarcodes(null);
         }
-    }, [isPhysical, parsedData, activeMappings]);
+    }, [isPhysical, parsedData, activeMappings, physicalLenderName]);
 
     // Sync generated headers to mappings so they appear in Preview/Export
     useEffect(() => {
@@ -883,7 +920,7 @@ export function useCSVMapping() {
                     if (knownCorrection) {
                         return {
                             sourceHeader: m.source_column,
-                            targetHeader: knownCorrection,
+                            targetHeader: knownCorrection === '__SKIPPED__' ? null : knownCorrection,
                             confidence: 1.0 // 100% confidence because the user taught it this
                         }
                     }
@@ -899,7 +936,7 @@ export function useCSVMapping() {
                 autoMappings = rawMappings.map((m: any) => {
                     const knownCorrection = learnedMappings[m.sourceHeader];
                     if (knownCorrection) {
-                        return { ...m, targetHeader: knownCorrection, confidence: 1.0 };
+                        return { ...m, targetHeader: knownCorrection === '__SKIPPED__' ? null : knownCorrection, confidence: 1.0 };
                     }
                     return m;
                 });
@@ -1019,13 +1056,15 @@ export function useCSVMapping() {
             const updated = [...prev];
             const sourceHeaderStr = updated[index].sourceHeader;
 
+            // Teach the model what the correct target is for this source header
+            // If the user skipped it (null), remember that as well
+            setLearnedMappings(prevLearning => ({
+                ...prevLearning,
+                [sourceHeaderStr]: newTarget === null ? '__SKIPPED__' : newTarget
+            }));
+
             if (newTarget !== null) {
                 const validTarget: string = newTarget;
-                // Teach the model what the correct target is for this source header
-                setLearnedMappings(prevLearning => ({
-                    ...prevLearning,
-                    [sourceHeaderStr]: validTarget
-                }));
 
                 // Check for duplicates
                 const isDuplicateMatch = (target: string, search: string) => {
@@ -1253,11 +1292,16 @@ export function useCSVMapping() {
         return false;
     };
 
-    const handlePhysicalToggle = () => {
+    const handlePhysicalToggle = (lenderName?: string) => {
         const newIsPhysical = !isPhysical;
         setIsPhysical(newIsPhysical);
 
+        if (newIsPhysical && lenderName) {
+            setPhysicalLenderName(lenderName);
+        }
+
         if (!newIsPhysical) {
+            setPhysicalLenderName('');
             setMappings((prev) =>
                 prev.map((mapping) =>
                     mapping.targetHeader === 'barcode'

@@ -9,7 +9,8 @@
         "dev:ai": "npm run dev --prefix \"legal pro/AI Legal Portal\"",
         "dev:dashboard": "npm run dev --prefix dashboard",
         "dev:backend": "python backend/main.py",
-        "dev:all": "concurrently \"npm run dev:barcode\" \"npm run dev:mapping\" \"npm run dev:ai\" \"npm run dev:dashboard\" \"npm run dev:backend\"",
+        "dev:coverletter": "npm run dev --prefix CoverLetterApp",
+        "dev:all": "concurrently \"npm run dev:barcode\" \"npm run dev:mapping\" \"npm run dev:ai\" \"npm run dev:dashboard\" \"npm run dev:backend\" \"npm run dev:coverletter\"",
         "dev": "npm run dev:all"
     },
     "devDependencies": {
@@ -18,6 +19,7 @@
         "@types/react-dom": "^19.2.3",
         "autoprefixer": "^10.4.24",
         "concurrently": "^8.2.2",
+        "nodemon": "^3.1.14",
         "postcss": "^8.5.6",
         "tailwindcss": "^4.1.18"
     },
@@ -25,6 +27,7 @@
         "@tiptap/extension-image": "^3.19.0",
         "clsx": "^2.1.1",
         "lucide-react": "^0.574.0",
+        "react-quill": "^2.0.0",
         "react-router-dom": "^7.13.0",
         "tailwind-merge": "^3.4.1"
     }

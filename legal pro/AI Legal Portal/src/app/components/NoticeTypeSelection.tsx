@@ -59,8 +59,8 @@ export function NoticeTypeSelection({ onSelect, onBack }: NoticeTypeSelectionPro
       </Button>
 
       <div className="mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">Select Notice Type</h2>
-        <p className="text-gray-600">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">Select Notice Type</h2>
+        <p className="text-gray-600 dark:text-gray-400">
           Choose the type of legal notice you want to generate
         </p>
       </div>
@@ -71,7 +71,7 @@ export function NoticeTypeSelection({ onSelect, onBack }: NoticeTypeSelectionPro
           return (
             <Card
               key={notice.id}
-              className="p-6 hover:shadow-xl hover:border-blue-200/50 transition-all duration-300 cursor-pointer group bg-white/60 hover:bg-white/90"
+              className="p-6 hover:shadow-xl hover:border-blue-200/50 transition-all duration-300 cursor-pointer group bg-white/60 dark:bg-gray-800/80 hover:bg-white/90 dark:hover:bg-gray-700/80 border-gray-200/50 dark:border-gray-700/50"
               onClick={() => onSelect(notice.id)}
             >
               <div className="flex items-start gap-4">
@@ -79,10 +79,10 @@ export function NoticeTypeSelection({ onSelect, onBack }: NoticeTypeSelectionPro
                   <Icon className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {notice.title}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                     {notice.description}
                   </p>
                 </div>

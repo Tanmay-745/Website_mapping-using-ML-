@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CSVUploader } from './components/CSVUploader';
 import { MappingInterface } from './components/MappingInterface';
 import { Download, RotateCcw, FileText } from 'lucide-react';
@@ -36,6 +36,20 @@ export default function App() {
 
   const [newColumnName, setNewColumnName] = useState('');
   const [showAddColumn, setShowAddColumn] = useState(false);
+
+  useEffect(() => {
+    const handleThemeChange = (event: MessageEvent) => {
+      if (event.data?.type === 'THEME_CHANGE') {
+        if (event.data.isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+    window.addEventListener('message', handleThemeChange);
+    return () => window.removeEventListener('message', handleThemeChange);
+  }, []);
 
   const onAddCustomColumn = async () => {
     if (await handleAddCustomColumn(newColumnName)) {
@@ -99,13 +113,13 @@ export default function App() {
       toast.success("Data synced! Opening AI Portal...", { id: toastId });
 
       // 3. Open AI Portal
-      window.parent.postMessage({ type: 'SWITCH_APP', appId: 'legal-pro' }, '*');
+      window.parent.postMessage({ type: 'SWITCH_APP', appId: 'legal-pro', action: 'NEW_TEMPLATE' }, '*');
 
     } catch (error) {
       console.error("Sync Error", error);
       toast.error("Could not sync data to AI Portal. Is the local proxy running? Opening anyway...", { id: toastId });
       // Open anyway as fallback
-      window.parent.postMessage({ type: 'SWITCH_APP', appId: 'legal-pro' }, '*');
+      window.parent.postMessage({ type: 'SWITCH_APP', appId: 'legal-pro', action: 'NEW_TEMPLATE' }, '*');
     }
   };
 
@@ -153,14 +167,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100">
       <Toaster position="top-right" />
 
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 dark:bg-blue-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
 
       <Header />
@@ -233,14 +247,14 @@ export default function App() {
             <div className="flex gap-4 justify-end">
               <button
                 onClick={handleReset}
-                className="group px-6 py-3 border-2 border-gray-300 bg-white rounded-xl hover:border-gray-400 hover:shadow-lg transition-all duration-300 flex items-center gap-2 font-medium text-gray-700"
+                className="group px-6 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-lg transition-all duration-300 flex items-center gap-2 font-medium text-gray-700 dark:text-gray-200"
               >
                 <RotateCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
                 Upload New File
               </button>
               <button
                 onClick={handleCreateTemplate}
-                className="group relative px-6 py-3 bg-white border-2 border-purple-200 text-purple-700 rounded-xl hover:bg-purple-50 hover:border-purple-300 transition-all duration-300 flex items-center gap-2 font-medium shadow-sm hover:shadow-md"
+                className="group relative px-6 py-3 bg-white dark:bg-gray-800 border-2 border-purple-200 dark:border-purple-500/50 text-purple-700 dark:text-purple-300 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:border-purple-300 dark:hover:border-purple-400 transition-all duration-300 flex items-center gap-2 font-medium shadow-sm hover:shadow-md"
               >
                 <FileText className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
                 Create Template

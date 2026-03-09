@@ -144,23 +144,23 @@ export function VariableConfiguration({
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
           Variable Configuration
         </h2>
-        <p className="text-slate-600">
+        <p className="text-slate-600 dark:text-gray-400">
           Upload CSV file and configure variables for your template
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* CSV Upload */}
-        <Card className="p-6">
-          <Label className="text-lg font-semibold mb-4 block">
+        <Card className="p-6 bg-white/50 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50">
+          <Label className="text-lg font-semibold mb-4 block dark:text-white">
             Upload CSV File for Headers
           </Label>
           <div className="space-y-4">
             <div
-              className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-slate-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               <input
@@ -170,11 +170,11 @@ export function VariableConfiguration({
                 onChange={handleFileUpload}
                 className="hidden"
               />
-              <FileSpreadsheet className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-600 mb-2">
+              <FileSpreadsheet className="w-12 h-12 text-slate-400 dark:text-gray-500 mx-auto mb-4" />
+              <p className="text-slate-600 dark:text-gray-300 mb-2">
                 {fileName || "Click to upload CSV file"}
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-gray-400">
                 CSV file with header row containing variable names
               </p>
             </div>
@@ -202,19 +202,19 @@ export function VariableConfiguration({
 
             {/* Sample Data Display */}
             {previewData && previewData.length > 0 && (
-              <div className="mt-6 border rounded-lg overflow-hidden">
-                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
-                  <h3 className="font-semibold text-sm text-slate-700">Preview Data (First 5 Rows)</h3>
-                  <span className="text-xs text-slate-500">
+              <div className="mt-6 border dark:border-gray-700/50 rounded-lg overflow-hidden">
+                <div className="bg-slate-50 dark:bg-gray-900/50 px-4 py-2 border-b border-slate-200 dark:border-gray-700/50 flex justify-between items-center">
+                  <h3 className="font-semibold text-sm text-slate-700 dark:text-gray-200">Preview Data (First 5 Rows)</h3>
+                  <span className="text-xs text-slate-500 dark:text-gray-400">
                     {fileName && fileName !== "Imported Data" ? "from Uploaded CSV" : "from CSV Mapping Portal"}
                   </span>
                 </div>
                 <div className="overflow-x-auto max-w-full">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-700 font-medium">
+                    <thead className="bg-slate-50 dark:bg-gray-900/50 text-slate-700 dark:text-gray-300 font-medium">
                       <tr>
                         {csvHeaders.map((header) => (
-                          <th key={header} className="px-4 py-2 border-b border-r last:border-r-0 whitespace-nowrap">
+                          <th key={header} className="px-4 py-2 border-b dark:border-gray-700/50 border-r last:border-r-0 whitespace-nowrap">
                             {header}
                           </th>
                         ))}
@@ -222,10 +222,10 @@ export function VariableConfiguration({
                     </thead>
                     <tbody>
                       {previewData.map((row, idx) => (
-                        <tr key={idx} className="border-b last:border-b-0 hover:bg-slate-50">
+                        <tr key={idx} className="border-b dark:border-gray-700/50 last:border-b-0 hover:bg-slate-50 dark:hover:bg-gray-800/50">
                           {csvHeaders.map((header) => (
-                            <td key={`${idx}-${header}`} className="px-4 py-2 border-r last:border-r-0 whitespace-nowrap max-w-[200px] truncate">
-                              {row[header] || <span className="text-slate-400 italic">empty</span>}
+                            <td key={`${idx}-${header}`} className="px-4 py-2 border-r dark:border-gray-700/50 last:border-r-0 whitespace-nowrap max-w-[200px] truncate text-slate-700 dark:text-gray-300">
+                              {row[header] || <span className="text-slate-400 dark:text-gray-500 italic">empty</span>}
                             </td>
                           ))}
                         </tr>
@@ -240,9 +240,9 @@ export function VariableConfiguration({
 
         {/* Variable Selection */}
         {csvHeaders.length > 0 && (
-          <Card className="p-6">
+          <Card className="p-6 bg-white/50 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50">
             <div className="flex items-center justify-between mb-4">
-              <Label className="text-lg font-semibold">
+              <Label className="text-lg font-semibold dark:text-white">
                 Select Variables to Use in Template
               </Label>
               <Button
@@ -256,6 +256,7 @@ export function VariableConfiguration({
                     setSelectedVariables([...csvHeaders]);
                   }
                 }}
+                className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
               >
                 {selectedVariables.length === csvHeaders.length ? "Deselect All" : "Select All"}
               </Button>
@@ -264,7 +265,7 @@ export function VariableConfiguration({
               {csvHeaders.map((header) => (
                 <div
                   key={header}
-                  className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex items-center gap-3 p-3 border border-slate-200 dark:border-gray-700/50 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700/50"
                 >
                   <Checkbox
                     id={`var-${header}`}
@@ -273,7 +274,7 @@ export function VariableConfiguration({
                   />
                   <Label
                     htmlFor={`var-${header}`}
-                    className="flex-1 cursor-pointer"
+                    className="flex-1 cursor-pointer dark:text-gray-300"
                   >
                     {header}
                   </Label>
@@ -282,18 +283,18 @@ export function VariableConfiguration({
             </div>
 
             {selectedVariables.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <p className="text-sm text-slate-600 mb-2">
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700/50">
+                <p className="text-sm text-slate-600 dark:text-gray-400 mb-2">
                   Selected Variables ({selectedVariables.length}):
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {selectedVariables.map((variable) => (
-                    <Badge key={variable} variant="secondary">
+                    <Badge key={variable} variant="secondary" className="dark:bg-gray-700 dark:text-gray-200">
                       {variable}
                       <button
                         type="button"
                         onClick={() => handleVariableToggle(variable)}
-                        className="ml-2 hover:text-red-600"
+                        className="ml-2 hover:text-red-600 dark:hover:text-red-400"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -307,21 +308,21 @@ export function VariableConfiguration({
 
         {/* Amount to Words Variables */}
         {selectedVariables.length > 0 && (
-          <Card className="p-6">
+          <Card className="p-6 bg-white/50 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50">
             <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              <Label className="text-lg font-semibold">
+              <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <Label className="text-lg font-semibold dark:text-white">
                 Convert Amount to Words
               </Label>
             </div>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-slate-600 dark:text-gray-400 mb-4">
               Select numeric amount variables that should be converted to words in the notice
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {selectedVariables.map((variable) => (
                 <div
                   key={variable}
-                  className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex items-center gap-3 p-3 border border-slate-200 dark:border-gray-700/50 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700/50"
                 >
                   <Checkbox
                     id={`amt-${variable}`}
@@ -330,7 +331,7 @@ export function VariableConfiguration({
                   />
                   <Label
                     htmlFor={`amt-${variable}`}
-                    className="flex-1 cursor-pointer"
+                    className="flex-1 cursor-pointer dark:text-gray-300"
                   >
                     {variable}
                   </Label>
@@ -339,18 +340,18 @@ export function VariableConfiguration({
             </div>
 
             {amountVariables.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <p className="text-sm text-slate-600 mb-2">
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700/50">
+                <p className="text-sm text-slate-600 dark:text-gray-400 mb-2">
                   Amount Variables ({amountVariables.length}):
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {amountVariables.map((variable) => (
-                    <Badge key={variable} variant="secondary" className="bg-green-100 text-green-700">
+                    <Badge key={variable} variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
                       {variable}
                       <button
                         type="button"
                         onClick={() => handleAmountVariableToggle(variable)}
-                        className="ml-2 hover:text-red-600"
+                        className="ml-2 hover:text-red-600 dark:hover:text-red-400"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -363,30 +364,30 @@ export function VariableConfiguration({
         )}
 
         {/* Delivery Mode */}
-        <Card className="p-6">
+        <Card className="p-6 bg-white/50 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center gap-2 mb-4">
-            <Radio className="w-5 h-5 text-blue-600" />
-            <Label className="text-lg font-semibold">Notice Delivery Mode</Label>
+            <Radio className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <Label className="text-lg font-semibold dark:text-white">Notice Delivery Mode</Label>
           </div>
           <RadioGroup value={deliveryMode} onValueChange={(value) => handleDeliveryModeChange(value as "physical" | "digital")}>
             <div className="space-y-3">
-              <div className="flex items-center space-x-3 p-4 border border-slate-200 rounded-lg hover:bg-slate-50">
+              <div className="flex items-center space-x-3 p-4 border border-slate-200 dark:border-gray-700/50 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700/50">
                 <RadioGroupItem value="digital" id="digital" />
                 <Label htmlFor="digital" className="flex-1 cursor-pointer">
                   <div>
-                    <p className="font-medium">Digital Notice</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="font-medium dark:text-gray-200">Digital Notice</p>
+                    <p className="text-sm text-slate-600 dark:text-gray-400">
                       Email or electronic delivery of the notice
                     </p>
                   </div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-4 border border-slate-200 rounded-lg hover:bg-slate-50">
+              <div className="flex items-center space-x-3 p-4 border border-slate-200 dark:border-gray-700/50 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700/50">
                 <RadioGroupItem value="physical" id="physical" />
                 <Label htmlFor="physical" className="flex-1 cursor-pointer">
                   <div>
-                    <p className="font-medium">Physical Notice</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="font-medium dark:text-gray-200">Physical Notice</p>
+                    <p className="text-sm text-slate-600 dark:text-gray-400">
                       Printed and postal delivery of the notice
                     </p>
                   </div>

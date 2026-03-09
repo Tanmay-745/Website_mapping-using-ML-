@@ -50,17 +50,17 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
     <>
       <div>
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Saved Templates</h2>
-          <p className="text-slate-600">Manage your saved legal notice templates</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Saved Templates</h2>
+          <p className="text-slate-600 dark:text-slate-400">Manage your saved legal notice templates</p>
         </div>
 
         {templates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <FileText className="w-6 h-6 text-gray-400" />
+          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 dark:border-gray-700/50 rounded-lg bg-gray-50/50 dark:bg-gray-800/50">
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+              <FileText className="w-6 h-6 text-gray-400 dark:text-gray-500" />
             </div>
-            <p className="text-lg font-medium text-gray-600">No saved templates</p>
-            <p className="text-sm text-gray-500">Your saved templates will appear here</p>
+            <p className="text-lg font-medium text-gray-600 dark:text-gray-300">No saved templates</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Your saved templates will appear here</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -68,23 +68,23 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
               <Card key={template.id} className="p-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="bg-blue-100 p-2 rounded">
-                      <FileText className="w-4 h-4 text-blue-600" />
+                    <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded">
+                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">{template.templateName}</h3>
-                      <Badge variant="outline" className="mt-0.5 text-xs">
+                      <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{template.templateName}</h3>
+                      <Badge variant="outline" className="mt-0.5 text-xs dark:border-slate-700 dark:text-slate-300">
                         {noticeTypeNames[template.noticeType!]}
                       </Badge>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-600 mb-3 line-clamp-2">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-3 line-clamp-2">
                   {template.description}
                 </p>
 
-                <div className="space-y-1 text-xs text-slate-600 mb-3">
+                <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400 mb-3">
                   <div className="flex items-center gap-2">
                     <FileType className="w-3 h-3" />
                     <span>{template.selectedVariables.length} variables</span>
@@ -94,9 +94,9 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                     <span>{new Date(template.createdAt).toLocaleDateString()}</span>
                   </div>
                   {template.languages && Object.keys(template.languages).length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-slate-100">
+                    <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                       {Object.keys(template.languages).map(lang => (
-                        <Badge key={lang} variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
+                        <Badge key={lang} variant="secondary" className="text-[10px] h-4 px-1.5 font-normal dark:bg-slate-800 dark:text-slate-300">
                           {lang}
                         </Badge>
                       ))}
@@ -108,7 +108,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-8 text-xs"
+                    className="flex-1 h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white"
                     onClick={() => setPreviewTemplate(template)}
                   >
                     <Eye className="w-3 h-3 mr-1" />
@@ -117,7 +117,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-8 text-xs"
+                    className="flex-1 h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white"
                     onClick={() => onClone(template)}
                   >
                     <Copy className="w-3 h-3 mr-1" />
@@ -127,7 +127,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(template.id)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/30"
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>
@@ -144,14 +144,14 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
           <DialogHeader>
             <DialogTitle>{previewTemplate?.templateName}</DialogTitle>
           </DialogHeader>
-          <div className="prose prose-sm max-w-none">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
             {previewTemplate?.content ? (
               <div
                 dangerouslySetInnerHTML={{ __html: previewTemplate.content }}
-                className="border border-slate-200 rounded-lg p-6 bg-white"
+                className="border border-slate-200 dark:border-slate-700 rounded-lg p-6 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-slate-200"
               />
             ) : (
-              <p className="text-slate-600">No content available</p>
+              <p className="text-slate-600 dark:text-slate-400">No content available</p>
             )}
           </div>
           <div className="flex justify-end gap-2 mt-4">

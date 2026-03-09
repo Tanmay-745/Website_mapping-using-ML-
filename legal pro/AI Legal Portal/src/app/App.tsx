@@ -54,38 +54,80 @@ function App() {
   });
 
   useEffect(() => {
-    const fetchSharedData = async () => {
-      try {
-        const response = await fetch('http://localhost:54321/api/share-data');
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.headers && Array.isArray(data.headers)) {
-            // Check for stale data (older than 15 minutes)
-            const MAX_AGE = 15 * 60 * 1000; // 15 minutes
-            const now = Date.now();
-            if (data.timestamp && (now - data.timestamp > MAX_AGE)) {
-              console.log("Ignoring stale shared data");
-              return;
-            }
-
-            toast.success("Loaded mapped data from CSV Portal!");
-            setTemplateData(prev => ({
-              ...prev,
-              csvHeaders: data.headers,
-              sampleData: data.sampleData || [],
-              deliveryMode: data.deliveryMode || "digital",
-              importedDeliveryMode: data.deliveryMode,
-              // Auto-select all if it's a new template or no variables selected yet
-              selectedVariables: prev.selectedVariables.length === 0 ? data.headers : prev.selectedVariables
-            }));
-          }
+    const handleThemeChange = (event: MessageEvent) => {
+      if (event.data?.type === 'THEME_CHANGE') {
+        if (event.data.isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
         }
-      } catch (e) {
-        console.log("No shared data found or server offline");
+      }
+    };
+    window.addEventListener('message', handleThemeChange);
+    return () => window.removeEventListener('message', handleThemeChange);
+  }, []);
+
+  const fetchSharedData = async () => {
+    try {
+      const response = await fetch('http://localhost:54321/api/share-data');
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.headers && Array.isArray(data.headers)) {
+          // Check for stale data (older than 15 minutes)
+          const MAX_AGE = 15 * 60 * 1000; // 15 minutes
+          const now = Date.now();
+          if (data.timestamp && (now - data.timestamp > MAX_AGE)) {
+            console.log("Ignoring stale shared data");
+            return;
+          }
+
+          toast.success("Loaded mapped data from CSV Portal!");
+          setTemplateData(prev => ({
+            ...prev,
+            csvHeaders: data.headers,
+            sampleData: data.sampleData || [],
+            deliveryMode: data.deliveryMode || "digital",
+            importedDeliveryMode: data.deliveryMode,
+            // Auto-select all if it's a new template or no variables selected yet
+            selectedVariables: prev.selectedVariables.length === 0 ? data.headers : prev.selectedVariables
+          }));
+        }
+      }
+    } catch (e) {
+      console.log("No shared data found or server offline");
+    }
+  };
+
+  useEffect(() => {
+    fetchSharedData();
+  }, []);
+
+  useEffect(() => {
+    const handleAppMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'APP_ACTIVATED' && event.data?.appId === 'legal-pro') {
+        if (event.data?.action === 'NEW_TEMPLATE') {
+          // Reset state to start a new template 
+          setTemplateData({
+            noticeType: null,
+            templateName: "",
+            description: "",
+            lender: "",
+            advocate: "",
+            csvHeaders: [],
+            selectedVariables: [],
+            amountVariables: [],
+            deliveryMode: "digital",
+            importedDeliveryMode: undefined,
+          });
+          setStep("type");
+          // Fetch fresh mapped data
+          fetchSharedData();
+        }
       }
     };
 
-    fetchSharedData();
+    window.addEventListener('message', handleAppMessage);
+    return () => window.removeEventListener('message', handleAppMessage);
   }, []);
 
   const handleNoticeTypeSelect = (type: NoticeType) => {
@@ -141,14 +183,14 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100">
       <Toaster />
 
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 dark:bg-blue-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
 
       {/* Header */}
@@ -179,14 +221,14 @@ function App() {
             </div>
 
             <div className="lg:col-span-5 h-full">
-              <Card className="h-full flex flex-col items-center justify-center p-8 text-center bg-white/50 backdrop-blur-sm border-gray-200/50 shadow-sm hover:shadow-md transition-all">
+              <Card className="h-full flex flex-col items-center justify-center p-8 text-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all">
                 <div className="bg-gradient-to-br from-blue-500 to-purple-600 w-20 h-20 rounded-2xl shadow-lg flex items-center justify-center mb-6">
                   <FileText className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-4">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-4">
                   Create New Template
                 </h2>
-                <p className="text-gray-600 mb-8 max-w-xs mx-auto">
+                <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-xs mx-auto">
                   Start fresh with our AI-powered template builder to create customized legal notices.
                 </p>
                 <Button
