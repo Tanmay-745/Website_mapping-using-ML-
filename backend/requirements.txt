@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+sentence-transformers
+openpyxl
+python-multipart
+transformers
+torch --index-url https://download.pytorch.org/whl/cpu
+sacremoses

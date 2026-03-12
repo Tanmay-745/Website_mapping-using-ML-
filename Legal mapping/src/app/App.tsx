@@ -9,6 +9,7 @@ import { PhysicalToggle } from './components/PhysicalToggle';
 import { DataPreview } from './components/DataPreview';
 
 import { ConsolidationToggle } from './components/ConsolidationToggle';
+import * as XLSX from 'xlsx';
 
 export default function App() {
   const {
@@ -146,24 +147,19 @@ export default function App() {
       return;
     }
 
-    // Convert to CSV
-    const csvContent = [
-      headers.join(','),
-      ...mappedData.map((row: any) =>
-        headers.map((header) => `"${row[header] || ''}"`).join(',')
-      ),
-    ].join('\n');
+    // Strip existing extensions and add .xlsx
+    const cleanFileName = parsedData.fileName.replace(/\.[^/.]+$/, "");
+    const exportFileName = `mapped_${cleanFileName}.xlsx`;
+
+    // Convert to Excel using SheetJS
+    const ws = XLSX.utils.json_to_sheet(mappedData, { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Mapped Data");
 
     // Download
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mapped_${parsedData.fileName}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    XLSX.writeFile(wb, exportFileName);
 
-    toast.success('Mapped CSV exported successfully (empty columns removed)!');
+    toast.success('Mapped Excel exported successfully (empty columns removed)!');
   };
 
   return (
@@ -266,7 +262,7 @@ export default function App() {
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
-                  Export Mapped CSV
+                  Export Mapped Excel
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>

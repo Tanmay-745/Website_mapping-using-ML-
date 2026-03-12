@@ -2,6 +2,7 @@ import http from 'http';
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
+import mammoth from 'mammoth';
 
 // Load .env file
 const envPath = path.resolve(process.cwd(), '.env');
@@ -33,7 +34,7 @@ if (!APA_KEY) {
     console.log("OPENAI_API_KEY loaded successfully.");
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, PUT, OPTIONS');
@@ -222,6 +223,260 @@ const server = http.createServer((req, res) => {
         }
         return;
     }
+
+    // --- Notice Types Persistence ---
+    const NOTICE_TYPES_FILE = path.join(process.cwd(), 'notice_types.json');
+
+    if (url.pathname === '/api/notice-types' && req.method === 'GET') {
+        try {
+            if (fs.existsSync(NOTICE_TYPES_FILE)) {
+                const data = fs.readFileSync(NOTICE_TYPES_FILE, 'utf8');
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(data);
+            } else {
+                // Return defaults if file doesn't exist
+                const defaults = [
+                    { id: "LRN", title: "Legal Recovery Notice (LRN)", description: "Formal notice for initiating legal recovery proceedings for outstanding dues", icon: "FileText", color: "blue" },
+                    { id: "LDN", title: "Legal Demand Notice (LDN)", description: "Demand notice requiring immediate payment or action from the recipient", icon: "AlertCircle", color: "red" },
+                    { id: "OTS", title: "One Time Settlement (OTS)", description: "Settlement offer for resolving outstanding dues with a one-time payment", icon: "DollarSign", color: "green" },
+                    { id: "Overdue", title: "Overdue Notice", description: "Reminder notice for overdue payments with penalty information", icon: "Clock", color: "orange" }
+                ];
+                fs.writeFileSync(NOTICE_TYPES_FILE, JSON.stringify(defaults, null, 2));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(defaults));
+            }
+        } catch (e) {
+            console.error("Failed to read notice types", e);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: "Internal Server Error" }));
+        }
+        return;
+    }
+
+    if (url.pathname === '/api/notice-types' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const newType = JSON.parse(body);
+                let types = [];
+                if (fs.existsSync(NOTICE_TYPES_FILE)) {
+                    types = JSON.parse(fs.readFileSync(NOTICE_TYPES_FILE, 'utf8'));
+                }
+                
+                // Ensure unique ID
+                if (!newType.id) {
+                    newType.id = newType.title.replace(/\s+/g, '-').toLowerCase();
+                }
+                
+                // Add default icon and color if missing
+                if (!newType.icon) newType.icon = "FileText";
+                if (!newType.color) newType.color = "blue";
+
+                types.push(newType);
+                fs.writeFileSync(NOTICE_TYPES_FILE, JSON.stringify(types, null, 2));
+
+                console.log("Notice type created:", newType.title);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, noticeType: newType }));
+            } catch (e) {
+                console.error("Failed to save notice type", e);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Invalid JSON or Server Error" }));
+            }
+        });
+        return;
+    }
+
+    // --- Template Discovery & Analysis (Non-LLM) ---
+    const NOTICE_FOLDER = path.join(process.cwd(), 'Notice folder');
+
+    if (url.pathname === '/api/templates/search' && req.method === 'GET') {
+        const query = url.searchParams.get('query') || '';
+        const lender = url.searchParams.get('lender') || '';
+        const type = url.searchParams.get('type') || '';
+
+        try {
+            if (fs.existsSync(NOTICE_FOLDER)) {
+                const templates = fs.readdirSync(NOTICE_FOLDER)
+                    .filter(f => f.endsWith('.docx') && !f.includes('- Copy'));
+
+                let bestMatch = null;
+
+                // 1. Try exact Lender_Type match
+                if (lender && type) {
+                    const exactMatch = templates.find(f =>
+                        f.toLowerCase() === `${lender.toLowerCase()}_${type.toLowerCase()}.docx`
+                    );
+                    if (exactMatch) bestMatch = exactMatch;
+                }
+
+                // 2. Try Type match if no exact match found
+                if (!bestMatch && type) {
+                    const typeMatch = templates.find(f =>
+                        f.toLowerCase().includes(type.toLowerCase())
+                    );
+                    if (typeMatch) bestMatch = typeMatch;
+                }
+
+                // 3. Fallback to general query search if still nothing or no specific params
+                if (!bestMatch && query) {
+                    bestMatch = templates.find(f =>
+                        f.toLowerCase().includes(query.toLowerCase())
+                    );
+                }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(bestMatch ? [bestMatch] : []));
+            } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Notice folder not found" }));
+            }
+        } catch (e) {
+            console.error("Search failed", e);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: "Search failed" }));
+        }
+        return;
+    }
+
+    if (url.pathname === '/api/templates/analyze' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', async () => {
+            try {
+                const { templateName } = JSON.parse(body);
+                const filePath = path.join(NOTICE_FOLDER, templateName);
+
+                if (fs.existsSync(filePath)) {
+                    const result = await mammoth.extractRawText({ path: filePath });
+                    const text = result.value;
+
+                    // Regex to find all occurrences of ${variable_name}
+                    const pattern = /\$\{([^}]+)\}/g;
+                    let matches = [];
+                    let match;
+                    while ((match = pattern.exec(text)) !== null) {
+                        matches.push(match[1]);
+                    }
+
+                    const uniquePlaceholders = [...new Set(matches)].sort();
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        success: true,
+                        templateName,
+                        placeholders: uniquePlaceholders
+                    }));
+                } else {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: "Template not found" }));
+                }
+            } catch (e) {
+                console.error("Analysis failed", e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Analysis failed" }));
+            }
+        });
+        return;
+    }
+
+    if (url.pathname === '/api/templates/save' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', async () => {
+            try {
+                const { lender, type, content } = JSON.parse(body);
+                if (!lender || !type || !content) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: "Missing required fields" }));
+                    return;
+                }
+
+                const fileName = `${lender}_${type}.docx`;
+                const filePath = path.join(NOTICE_FOLDER, fileName);
+
+                // For now saving as HTML-styled text in a .docx named file
+                // Note: True .docx generation would require a library like docx
+                fs.writeFileSync(filePath, content);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, fileName }));
+            } catch (e) {
+                console.error("Save failed", e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Save failed" }));
+            }
+        });
+        return;
+    }
+
+    if (url.pathname.startsWith('/api/templates/file/') && req.method === 'GET') {
+        const fileName = url.pathname.replace('/api/templates/file/', '');
+        const filePath = path.join(NOTICE_FOLDER, fileName);
+
+        try {
+            if (fs.existsSync(filePath)) {
+                if (fileName.toLowerCase().endsWith('.docx')) {
+                    const result = await mammoth.convertToHtml({ path: filePath });
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.end(result.value);
+                } else {
+                    const content = fs.readFileSync(filePath, 'utf8');
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.end(content);
+                }
+            } else {
+                res.writeHead(404);
+                res.end("Not found");
+            }
+        } catch (e) {
+            console.error("Error reading template file", e);
+            res.writeHead(500);
+            res.end("Error reading file");
+        }
+        return;
+    }
+    // --- ML Mapping Endpoints ---
+    if (url.pathname === '/api/ml/map-variables' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const mlPayload = body;
+                const mlReq = http.request({
+                    hostname: 'localhost',
+                    port: 8000,
+                    path: '/map',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(mlPayload)
+                    }
+                }, (mlRes) => {
+                    let data = '';
+                    mlRes.on('data', chunk => data += chunk);
+                    mlRes.on('end', () => {
+                        res.writeHead(mlRes.statusCode, { 'Content-Type': 'application/json' });
+                        res.end(data);
+                    });
+                });
+
+                mlReq.on('error', (e) => {
+                    console.error("ML service connection error:", e);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: "ML mapping service not running on port 8000" }));
+                });
+
+                mlReq.write(mlPayload);
+                mlReq.end();
+            } catch (e) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Invalid JSON" }));
+            }
+        });
+        return;
+    }
     // -----------------------------
 
     if (url.pathname === '/functions/v1/server/api/generate' && req.method === 'POST') {
@@ -239,147 +494,60 @@ const server = http.createServer((req, res) => {
                 }
                 const { prompt, context, apiKey } = JSON.parse(body);
 
-                // Determine Provider
-                const provider = envVars.AI_PROVIDER || process.env.AI_PROVIDER || 'openai';
-                const model = envVars.OLLAMA_MODEL || process.env.OLLAMA_MODEL || 'mistral';
+                // LOCAL ML IMPLEMENTATION (RAG)
+                console.log(`Processing request using Local ML RAG`);
 
-                console.log(`Processing request using provider: ${provider}`);
-
-                if (provider === 'ollama') {
-                    // OLLAMA IMPLEMENTATION
-                    const ollamaPayload = JSON.stringify({
-                        model: model,
-                        messages: [
-                            {
-                                role: "system",
-                                content: "You are an expert legal assistant specializing in drafting Indian legal notices. Output ONLY valid HTML content suitable for a rich text editor. Do not use markdown code blocks."
-                            },
-                            {
-                                role: "user",
-                                content: `Context: ${JSON.stringify(context)}\n\nTask: ${prompt}`
-                            }
-                        ],
-                        stream: false
-                    });
-
-                    const ollamaReq = http.request({
-                        hostname: 'localhost',
-                        port: 11434,
-                        path: '/api/chat',
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Content-Length': Buffer.byteLength(ollamaPayload)
-                        }
-                    }, (ollamaRes) => {
-                        let data = '';
-                        ollamaRes.on('data', chunk => data += chunk);
-                        ollamaRes.on('end', () => {
-                            if (ollamaRes.statusCode >= 200 && ollamaRes.statusCode < 300) {
-                                try {
-                                    const responseData = JSON.parse(data);
-                                    let content = responseData.message?.content || "";
-                                    // Clean up markdown
-                                    content = content.replace(/^```html\s*/, '').replace(/^```\s*/, '').replace(/```$/, '');
-
-                                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                                    res.end(JSON.stringify({ result: content }));
-                                } catch (e) {
-                                    console.error("Ollama Parse Error", e);
-                                    res.writeHead(500, { 'Content-Type': 'application/json' });
-                                    res.end(JSON.stringify({ error: "Failed to parse Ollama response" }));
-                                }
-                            } else {
-                                console.error("Ollama Error", data);
-                                res.writeHead(ollamaRes.statusCode, { 'Content-Type': 'application/json' });
-                                res.end(JSON.stringify({ error: `Ollama Error: ${ollamaRes.statusMessage}` }));
-                            }
-                        });
-                    });
-
-                    ollamaReq.on('error', (e) => {
-                        console.error("Ollama Connection Error:", e);
-                        res.writeHead(500, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({
-                            error: "Could not connect to Ollama. Make sure it is running!",
-                            details: e.message
-                        }));
-                    });
-
-                    ollamaReq.write(ollamaPayload);
-                    ollamaReq.end();
-                    return;
-
-                }
-
-                // OPENAI IMPLEMENTATION (Default)
-                const apiKeyToUse = apiKey || APA_KEY;
-
-                if (!apiKeyToUse) {
-                    console.error("Missing OpenAI API Key");
-                    res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: "OpenAI API Key not configured" }));
-                    return;
-                }
-
-                const openAiPayload = JSON.stringify({
-                    model: "gpt-4o",
-                    messages: [
-                        {
-                            role: "system",
-                            content: "You are an expert legal assistant specializing in drafting Indian legal notices (LRN, LDN, OTS, etc.). Your output should be professional, legally precise, and formatted in HTML (using tags like <p>, <h3>, <ul>, <strong>, etc.) suitable for a rich text editor. Do not wrap the output in markdown code blocks."
-                        },
-                        {
-                            role: "user",
-                            content: `Context: ${JSON.stringify(context)}\n\nTask: ${prompt}`
-                        }
-                    ],
-                    temperature: 0.7,
+                const mlPayload = JSON.stringify({
+                    prompt: prompt,
+                    context: context
                 });
 
-                const openAiReq = https.request('https://api.openai.com/v1/chat/completions', {
+                const mlReq = http.request({
+                    hostname: 'localhost',
+                    port: 8000,
+                    path: '/generate-notice',
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKeyToUse}`,
-                        'Content-Length': Buffer.byteLength(openAiPayload)
+                        'Content-Length': Buffer.byteLength(mlPayload)
                     }
-                }, (openAiRes) => {
+                }, (mlRes) => {
                     let data = '';
-                    openAiRes.on('data', (chunk) => data += chunk);
-                    openAiRes.on('end', () => {
-                        if (openAiRes.statusCode >= 200 && openAiRes.statusCode < 300) {
+                    mlRes.on('data', chunk => data += chunk);
+                    mlRes.on('end', () => {
+                        if (mlRes.statusCode >= 200 && mlRes.statusCode < 300) {
                             try {
                                 const responseData = JSON.parse(data);
-                                let content = responseData.choices[0].message.content;
-                                // Clean up markdown code blocks if present
-                                if (content) {
-                                    content = content.replace(/^```html\s*/, '').replace(/^```\s*/, '').replace(/```$/, '');
-                                }
-
+                                // The Python service returns { result: "...", source_template: "..." }
                                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                                res.end(JSON.stringify({ result: content }));
-                            } catch (parseError) {
-                                console.error("Error parsing OpenAI response:", parseError);
+                                res.end(JSON.stringify({ 
+                                    result: responseData.result,
+                                    source: responseData.source_template 
+                                }));
+                            } catch (e) {
+                                console.error("ML Parse Error", e);
                                 res.writeHead(500, { 'Content-Type': 'application/json' });
-                                res.end(JSON.stringify({ error: "Failed to parse OpenAI response: " + parseError.message }));
+                                res.end(JSON.stringify({ error: "Failed to parse local ML response" }));
                             }
                         } else {
-                            console.error("OpenAI API Error:", data);
-                            res.writeHead(openAiRes.statusCode, { 'Content-Type': 'application/json' });
-                            res.end(JSON.stringify({ error: `OpenAI API Error: ${openAiRes.statusMessage}`, details: data }));
+                            console.error("ML Service Error", data);
+                            res.writeHead(mlRes.statusCode, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ error: `ML Service Error: ${mlRes.statusMessage}` }));
                         }
                     });
                 });
 
-                openAiReq.on('error', (e) => {
-                    console.error("Request to OpenAI failed:", e);
+                mlReq.on('error', (e) => {
+                    console.error("Local ML Connection Error:", e);
                     res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: "Request to OpenAI failed: " + e.message }));
+                    res.end(JSON.stringify({
+                        error: "Could not connect to Local ML service on port 8000. Is it running?",
+                        details: e.message
+                    }));
                 });
 
-                openAiReq.write(openAiPayload);
-                openAiReq.end();
+                mlReq.write(mlPayload);
+                mlReq.end();
 
             } catch (parseError) {
                 console.error("Error parsing request body:", parseError);

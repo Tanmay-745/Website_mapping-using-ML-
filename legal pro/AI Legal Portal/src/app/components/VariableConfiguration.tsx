@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import Papa from "papaparse";
+import { cn } from "./ui/utils";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Checkbox } from "./ui/checkbox";
 import { TemplateData } from "../App";
-import { Upload, X, FileSpreadsheet, DollarSign, Radio, AlertTriangle } from "lucide-react";
+import { Upload, X, FileSpreadsheet, DollarSign, Radio, AlertTriangle, Sparkles } from "lucide-react";
+import { mapVariablesML } from "../api";
+import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import {
   AlertDialog,
@@ -51,10 +54,33 @@ export function VariableConfiguration({
 
   // Auto-detect on mount if no amount variables are selected yet
   useEffect(() => {
+    // 1. Check for detected placeholders from previous step
+    const detected = localStorage.getItem('detectedPlaceholders');
+    if (detected) {
+      try {
+        const placeholders = JSON.parse(detected);
+        if (placeholders && placeholders.length > 0) {
+          setSelectedVariables(prev => {
+            const combined = [...new Set([...prev, ...placeholders])];
+            return combined;
+          });
+
+          // Also add to headers if they aren't there (so they show up in UI)
+          setCsvHeaders(prev => {
+            const combined = [...new Set([...prev, ...placeholders])];
+            return combined;
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse detected placeholders", e);
+      }
+    }
+
+    // 2. Auto-detect amount variables
     if (amountVariables.length === 0 && selectedVariables.length > 0) {
-      const detected = detectAmountVariables(selectedVariables);
-      if (detected.length > 0) {
-        setAmountVariables(detected);
+      const detectedAmounts = detectAmountVariables(selectedVariables);
+      if (detectedAmounts.length > 0) {
+        setAmountVariables(detectedAmounts);
       }
     }
   }, []); // Run once on mount
@@ -117,6 +143,39 @@ export function VariableConfiguration({
         ? prev.filter((v) => v !== variable)
         : [...prev, variable]
     );
+  };
+
+  const [isMapping, setIsMapping] = useState(false);
+
+  const handleSmartMap = async () => {
+    const detected = localStorage.getItem('detectedPlaceholders');
+    if (!detected || csvHeaders.length === 0) {
+      toast.error("Please ensure you have a template selected and a CSV uploaded first.");
+      return;
+    }
+
+    try {
+      setIsMapping(true);
+      const placeholders = JSON.parse(detected);
+      toast.info("Analyzing semantics...");
+
+      const suggestions = await mapVariablesML(placeholders, csvHeaders);
+
+      // Auto-select those that have high confidence
+      const suggestedCols = suggestions
+        .filter(s => s.confidence > 0.4) // Threshold
+        .map(s => s.suggested_column);
+
+      const uniqueSelected = [...new Set([...suggestedCols])];
+      setSelectedVariables(uniqueSelected);
+
+      toast.success(`Successfully mapped ${uniqueSelected.length} variables based on template requirements!`);
+    } catch (error) {
+      console.error("Smart mapping failed", error);
+      toast.error("Smart mapping service is currently unavailable. Please start the ML service.");
+    } finally {
+      setIsMapping(false);
+    }
   };
 
   const handleAmountVariableToggle = (variable: string) => {
@@ -245,21 +304,34 @@ export function VariableConfiguration({
               <Label className="text-lg font-semibold dark:text-white">
                 Select Variables to Use in Template
               </Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (selectedVariables.length === csvHeaders.length) {
-                    setSelectedVariables([]);
-                  } else {
-                    setSelectedVariables([...csvHeaders]);
-                  }
-                }}
-                className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-              >
-                {selectedVariables.length === csvHeaders.length ? "Deselect All" : "Select All"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSmartMap}
+                  disabled={isMapping || csvHeaders.length === 0}
+                  className="bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300"
+                >
+                  <Sparkles className={cn("w-3 h-3 mr-1", isMapping && "animate-spin")} />
+                  {isMapping ? "Mapping..." : "Smart Map (ML)"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedVariables.length === csvHeaders.length) {
+                      setSelectedVariables([]);
+                    } else {
+                      setSelectedVariables([...csvHeaders]);
+                    }
+                  }}
+                  className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  {selectedVariables.length === csvHeaders.length ? "Deselect All" : "Select All"}
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {csvHeaders.map((header) => (

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "LRN",
+    "title": "Legal Recovery Notice (LRN)",
+    "description": "Formal notice for initiating legal recovery proceedings for outstanding dues",
+    "icon": "FileText",
+    "color": "blue"
+  },
+  {
+    "id": "LDN",
+    "title": "Legal Demand Notice (LDN)",
+    "description": "Demand notice requiring immediate payment or action from the recipient",
+    "icon": "AlertCircle",
+    "color": "red"
+  },
+  {
+    "id": "OTS",
+    "title": "One Time Settlement (OTS)",
+    "description": "Settlement offer for resolving outstanding dues with a one-time payment",
+    "icon": "DollarSign",
+    "color": "green"
+  },
+  {
+    "id": "Overdue",
+    "title": "Overdue Notice",
+    "description": "Reminder notice for overdue payments with penalty information",
+    "icon": "Clock",
+    "color": "orange"
+  }
+]

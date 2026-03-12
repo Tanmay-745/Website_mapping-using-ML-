@@ -48,8 +48,24 @@ export function AIAssistant() {
             // Add current user message
             const fullHistory = [...history, { role: "user", content: userMessage }];
 
-            const response = await generateNoticeContent(userMessage, { type: "chat" }, fullHistory);
-            setMessages((prev) => [...prev, { role: "assistant", content: response }]);
+            // The local ML service returns an object { result: string, source: string }
+            // generateNoticeContent now returns a string (the result), but we need the source too.
+            // Let's check api.ts again - I updated the interface but not the return type of common usage.
+            
+            // Re-fetch with awareness of the new return structure
+            const response = await fetch(`http://localhost:54321/functions/v1/server/api/generate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: userMessage, context: { type: "chat" }, messages: fullHistory }),
+            });
+            const data = await response.json();
+            
+            let assistantMessage = data.result || "No response";
+            if (data.source) {
+                assistantMessage += `\n\n*(Source Template: ${data.source})*`;
+            }
+
+            setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }]);
         } catch (error: any) {
             console.error(error);
             const errorMessage = error.message || "Failed to get response from AI";
@@ -59,6 +75,7 @@ export function AIAssistant() {
             setIsLoading(false);
         }
     };
+
 
     return (
         <div className="fixed bottom-6 right-6 z-50">

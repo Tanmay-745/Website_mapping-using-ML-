@@ -6,7 +6,7 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { NoticeType, TemplateData } from "../App";
 import { Sparkles, Store, Check, ChevronsUpDown } from "lucide-react";
-import { generateNoticeContent, getAdvocates, Advocate } from "../api";
+import { generateNoticeContent, getAdvocates, Advocate, searchTemplates, analyzeTemplate, getNoticeTypes } from "../api";
 import { toast } from "sonner";
 import { cn } from "./ui/utils";
 import {
@@ -28,13 +28,6 @@ interface TemplateDetailsFormProps {
   onNext: (data: Partial<TemplateData>) => void;
 }
 
-const noticeTypeNames = {
-  LRN: "Legal Recovery Notice",
-  LDN: "Legal Demand Notice",
-  OTS: "One Time Settlement",
-  Overdue: "Overdue Notice",
-};
-
 export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormProps) {
   const [formData, setFormData] = useState({
     templateName: "",
@@ -44,18 +37,63 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
   });
   const [open, setOpen] = useState(false);
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
+  const [noticeTypeNames, setNoticeTypeNames] = useState<Record<string, string>>({
+    LRN: "Legal Recovery Notice",
+    LDN: "Legal Demand Notice",
+    OTS: "One Time Settlement",
+    Overdue: "Overdue Notice",
+  });
 
   useEffect(() => {
-    const fetchAdvocates = async () => {
+    const fetchInitialData = async () => {
       try {
-        const data = await getAdvocates();
-        setAdvocates(data);
+        const [advData, typeData] = await Promise.all([
+          getAdvocates(),
+          getNoticeTypes()
+        ]);
+        setAdvocates(advData);
+        
+        const typeMapping: Record<string, string> = {};
+        typeData.forEach((t: any) => {
+          typeMapping[t.id] = t.title;
+        });
+        setNoticeTypeNames(typeMapping);
       } catch (error) {
-        console.error("Failed to load advocates", error);
+        console.error("Failed to load initial data", error);
       }
     };
-    fetchAdvocates();
+    fetchInitialData();
   }, []);
+
+  // Use effect to match template whenever lender changes
+  useEffect(() => {
+    const triggerMatch = async () => {
+      if (formData.lender && noticeType) {
+        const matches = await searchTemplates(formData.lender, noticeType);
+        if (matches && matches.length > 0) {
+          const matchedFile = matches[0];
+          toast.info(`Match found: ${matchedFile}. Detecting variables...`);
+
+          try {
+            const analysis = await analyzeTemplate(matchedFile);
+            toast.success(`Variables detected from template: ${analysis.placeholders.join(", ")}`);
+
+            // We'll pass the mathed file back so the next step knows to use its content
+            // or we could load it here. for now let's just flag it.
+            localStorage.setItem('lastMatchedTemplate', matchedFile);
+            localStorage.setItem('detectedPlaceholders', JSON.stringify(analysis.placeholders));
+          } catch (e) {
+            console.error("Analysis failed", e);
+          }
+        }
+      }
+    };
+
+    if (formData.lender.length > 3) {
+      const timer = setTimeout(triggerMatch, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.lender, noticeType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

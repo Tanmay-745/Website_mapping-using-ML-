@@ -3,7 +3,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { SavedTemplate } from "../App";
-import { FileText, Eye, Copy, Trash2, Calendar, FileType } from "lucide-react";
+import { FileText, Eye, Copy, Trash2, Calendar, FileType, Printer, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,22 +11,26 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { toast } from "sonner";
+import { getNoticeTypes } from "../api";
+import { DocumentPreview } from "./DocumentPreview";
+// @ts-ignore
+import html2pdf from "html2pdf.js";
 
 interface SavedTemplatesProps {
   onClone: (template: SavedTemplate) => void;
   onEdit: (template: SavedTemplate) => void;
 }
 
-const noticeTypeNames = {
-  LRN: "Legal Recovery Notice",
-  LDN: "Legal Demand Notice",
-  OTS: "One Time Settlement",
-  Overdue: "Overdue Notice",
-};
 
 export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
   const [templates, setTemplates] = useState<SavedTemplate[]>([]);
   const [previewTemplate, setPreviewTemplate] = useState<SavedTemplate | null>(null);
+  const [noticeTypeNames, setNoticeTypeNames] = useState<Record<string, string>>({
+    LRN: "Legal Recovery Notice",
+    LDN: "Legal Demand Notice",
+    OTS: "One Time Settlement",
+    Overdue: "Overdue Notice",
+  });
 
   useEffect(() => {
     // Load templates from localStorage
@@ -34,6 +38,21 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
     if (saved) {
       setTemplates(JSON.parse(saved));
     }
+
+    // Fetch notice types for dynamic naming
+    const fetchNoticeTypes = async () => {
+      try {
+        const types = await getNoticeTypes();
+        const mapping: Record<string, string> = {};
+        types.forEach((t: any) => {
+          mapping[t.id] = t.title;
+        });
+        setNoticeTypeNames(mapping);
+      } catch (e) {
+        console.error("Failed to fetch notice types", e);
+      }
+    };
+    fetchNoticeTypes();
   }, []);
 
   const handleDelete = (id: string) => {
@@ -46,12 +65,70 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
     }
   };
 
+  const handleDownloadPdf = async (template: SavedTemplate) => {
+    const toastId = toast.loading("Preparing PDF document...");
+    try {
+      const element = document.getElementById('document-preview-content');
+      if (!element) {
+        throw new Error("Preview content not found in DOM");
+      }
+
+      // Clone the element for export to avoid modification of the UI
+      const clone = element.cloneNode(true) as HTMLElement;
+      
+      // Remove shadow and other UI-only classes from the clone
+      const documentDiv = clone.querySelector('div');
+      if (documentDiv) {
+        documentDiv.style.boxShadow = 'none';
+        documentDiv.style.margin = '0';
+      }
+
+      // Attach to DOM temporarily for html2canvas to work correctly
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.left = "-9999px";
+      container.appendChild(clone);
+      document.body.appendChild(container);
+
+      const opt = {
+        margin: [10, 10, 10, 10] as [number, number, number, number],
+        filename: `${template.templateName.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          letterRendering: true,
+          logging: false
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      };
+
+      toast.loading("Generating PDF...", { id: toastId });
+      
+      if (typeof html2pdf !== 'function') {
+        throw new Error("PDF library not initialized. Please refresh and try again.");
+      }
+
+      await html2pdf().from(clone).set(opt).save();
+      
+      if (container.parentElement) {
+        document.body.removeChild(container);
+      }
+      toast.success("PDF downloaded successfully!", { id: toastId });
+    } catch (e: any) {
+      console.error("PDF Generation Error:", e);
+      toast.error(`PDF Error: ${e.message || "Unknown error"}`, { id: toastId });
+    }
+  };
+
   return (
     <>
       <div>
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Saved Templates</h2>
-          <p className="text-slate-600 dark:text-slate-400">Manage your saved legal notice templates</p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Saved Templates</h2>
+            <p className="text-slate-600 dark:text-slate-400">Manage your saved legal notice templates</p>
+          </div>
         </div>
 
         {templates.length === 0 ? (
@@ -65,7 +142,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {templates.map((template) => (
-              <Card key={template.id} className="p-4 hover:shadow-lg transition-shadow">
+              <Card key={template.id} className="p-4 hover:shadow-lg transition-shadow bg-white/60 dark:bg-slate-800/50 backdrop-blur-sm">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded">
@@ -74,7 +151,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                     <div>
                       <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{template.templateName}</h3>
                       <Badge variant="outline" className="mt-0.5 text-xs dark:border-slate-700 dark:text-slate-300">
-                        {noticeTypeNames[template.noticeType!]}
+                        {noticeTypeNames[template.noticeType as keyof typeof noticeTypeNames] || "Legal Notice"}
                       </Badge>
                     </div>
                   </div>
@@ -93,22 +170,13 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                     <Calendar className="w-3 h-3" />
                     <span>{new Date(template.createdAt).toLocaleDateString()}</span>
                   </div>
-                  {template.languages && Object.keys(template.languages).length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      {Object.keys(template.languages).map(lang => (
-                        <Badge key={lang} variant="secondary" className="text-[10px] h-4 px-1.5 font-normal dark:bg-slate-800 dark:text-slate-300">
-                          {lang}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white"
+                    className="flex-1 h-8 text-xs dark:bg-gray-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
                     onClick={() => setPreviewTemplate(template)}
                   >
                     <Eye className="w-3 h-3 mr-1" />
@@ -117,7 +185,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white"
+                    className="flex-1 h-8 text-xs dark:bg-gray-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
                     onClick={() => onClone(template)}
                   >
                     <Copy className="w-3 h-3 mr-1" />
@@ -127,7 +195,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(template.id)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/30"
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10"
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>
@@ -140,21 +208,33 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
 
       {/* Preview Dialog */}
       <Dialog open={!!previewTemplate} onOpenChange={() => setPreviewTemplate(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{previewTemplate?.templateName}</DialogTitle>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50 dark:bg-slate-900">
+          <DialogHeader className="p-6 bg-white dark:bg-slate-800 border-b dark:border-slate-700 flex flex-row items-center justify-between shrink-0">
+            <div>
+              <DialogTitle className="text-xl font-bold">{previewTemplate?.templateName}</DialogTitle>
+              <p className="text-sm text-slate-500 mt-1 uppercase tracking-wider">{noticeTypeNames[previewTemplate?.noticeType as keyof typeof noticeTypeNames]}</p>
+            </div>
+            <div className="flex gap-2 mr-8">
+               <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-2">
+                 <Printer className="w-4 h-4" />
+                 Print
+               </Button>
+               <Button variant="default" size="sm" onClick={() => previewTemplate && handleDownloadPdf(previewTemplate)} className="bg-blue-600 hover:bg-blue-700 gap-2">
+                 <Download className="w-4 h-4" />
+                 Download PDF
+               </Button>
+            </div>
           </DialogHeader>
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            {previewTemplate?.content ? (
-              <div
-                dangerouslySetInnerHTML={{ __html: previewTemplate.content }}
-                className="border border-slate-200 dark:border-slate-700 rounded-lg p-6 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-slate-200"
-              />
-            ) : (
-              <p className="text-slate-600 dark:text-slate-400">No content available</p>
-            )}
+          
+          <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-slate-100 dark:bg-slate-900/50">
+             {previewTemplate && (
+                <div id="document-preview-content">
+                  <DocumentPreview template={previewTemplate} />
+                </div>
+             )}
           </div>
-          <div className="flex justify-end gap-2 mt-4">
+
+          <div className="p-4 bg-white dark:bg-slate-800 border-t dark:border-slate-700 flex justify-end gap-3 shrink-0">
             <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
               Close
             </Button>
@@ -162,7 +242,7 @@ export function SavedTemplates({ onClone, onEdit }: SavedTemplatesProps) {
               <Button onClick={() => {
                 onEdit(previewTemplate);
                 setPreviewTemplate(null);
-              }}>
+              }} className="bg-blue-600 hover:bg-blue-700">
                 Edit Template
               </Button>
             )}

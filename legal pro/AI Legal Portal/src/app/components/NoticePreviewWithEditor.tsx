@@ -7,7 +7,7 @@ import { TemplateData, SavedTemplate } from "../App";
 import { FileText, Save, Mail, Printer, Edit3, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { TemplateEditor } from "./TemplateEditor";
-import { generateNoticeContent } from "../api";
+import { generateNoticeContent, saveTemplateToFolder, analyzeTemplate, getNoticeTypes } from "../api";
 import {
   Select,
   SelectContent,
@@ -19,18 +19,14 @@ import { Label } from "./ui/label";
 import { Languages } from "lucide-react";
 // @ts-ignore
 import html2pdf from "html2pdf.js";
+import { DocumentPreview } from "./DocumentPreview";
 
 interface NoticePreviewProps {
   templateData: TemplateData;
   onStartNew: () => void;
 }
 
-const noticeTypeNames = {
-  LRN: "Legal Recovery Notice",
-  LDN: "Legal Demand Notice",
-  OTS: "One Time Settlement",
-  Overdue: "Overdue Notice",
-};
+// Note: noticeTypeNames is now handled by state inside the component
 
 // Generate initial template content
 function generateInitialContent(templateData: TemplateData): string {
@@ -213,6 +209,12 @@ Collections & Recovery Department</p>
 
 export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) {
   const [isEditing, setIsEditing] = useState(!templateData.content);
+  const [noticeTypeNames, setNoticeTypeNames] = useState<Record<string, string>>({
+    LRN: "Legal Recovery Notice",
+    LDN: "Legal Demand Notice",
+    OTS: "One Time Settlement",
+    Overdue: "Overdue Notice",
+  });
 
   // State for content in different languages
   const [contentMap, setContentMap] = useState<Record<string, string>>(() => {
@@ -231,6 +233,46 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
       'English': templateData.content || generateInitialContent(templateData)
     };
   });
+
+  const [lastMatched, setLastMatched] = useState<string | null>(localStorage.getItem('lastMatchedTemplate'));
+
+  useEffect(() => {
+    // If a template was matched, try to load its exact content for the editor
+    const loadMatchedContent = async () => {
+      const matchedFile = localStorage.getItem('lastMatchedTemplate');
+      if (matchedFile && !templateData.content) {
+        try {
+          const response = await fetch(`http://localhost:54321/api/templates/file/${matchedFile}`);
+          if (response.ok) {
+            const text = await response.text();
+            setContentMap(prev => ({
+              ...prev,
+              'English': text
+            }));
+            toast.success(`Loaded template format from ${matchedFile}`);
+          }
+        } catch (e) {
+          console.error("Failed to load matched template content", e);
+        }
+      }
+    };
+
+    const fetchNoticeTypes = async () => {
+      try {
+        const types = await getNoticeTypes();
+        const mapping: Record<string, string> = { ...noticeTypeNames };
+        types.forEach((t: any) => {
+          mapping[t.id] = t.title;
+        });
+        setNoticeTypeNames(mapping);
+      } catch (e) {
+        console.error("Failed to fetch notice types", e);
+      }
+    };
+
+    loadMatchedContent();
+    fetchNoticeTypes();
+  }, []);
 
   const [currentLanguage, setCurrentLanguage] = useState("English");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -286,29 +328,71 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
     onStartNew(); // Redirect to Saved Templates portal
   };
 
+  const handleSaveToFolder = async () => {
+    const { lender, noticeType } = templateData;
+    if (!lender || !noticeType) {
+      toast.error("Lender and Notice Type are required to save to folder");
+      return;
+    }
+
+    const toastId = toast.loading(`Saving to Notice folder as ${lender}_${noticeType}.docx...`);
+    try {
+      const success = await saveTemplateToFolder(lender, noticeType, currentContent);
+      if (success) {
+        toast.success("Saved to Notice folder successfully!", { id: toastId });
+      } else {
+        throw new Error("Save check failed");
+      }
+    } catch (e) {
+      toast.error("Failed to save to Notice folder", { id: toastId });
+    }
+  };
+
   const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true);
-    const toastId = toast.loading("Generating PDF document...");
+    const toastId = toast.loading("Preparing professional PDF document...");
     try {
-      const container = document.createElement("div");
-      container.innerHTML = fullPreviewContent;
-      // Add printable CSS to the off-screen element
-      const style = document.createElement("style");
-      style.innerHTML = `body{font-family: Arial, sans-serif; padding: 40px; line-height: 1.6;} h1{text-align: center;} hr{margin: 20px 0;} img { max-width: 100%; height: auto; }`;
-      container.prepend(style);
+      // Use the hidden export container to ensure it works even if the user is on the Edit tab
+      let element = document.getElementById('pdf-export-content') || document.getElementById('document-preview-content');
+      
+      if (!element) {
+        throw new Error("Preview content not found. please ensure you have content in the editor.");
+      }
+
+      // Clone the element for export to avoid modification of the UI
+      const clone = element.cloneNode(true) as HTMLElement;
+      
+      // Ensure the clone is visible for the capture (though it's in a hidden container, 
+      // some captures might need it to be in the DOM tree)
+      // Remove shadow from clone if present
+      const innerDiv = clone.querySelector('div');
+      if (innerDiv) {
+        innerDiv.style.boxShadow = 'none';
+        innerDiv.style.margin = '0';
+      }
 
       const opt = {
-        margin: 10,
+        margin: [10, 10, 10, 10] as [number, number, number, number],
         filename: `${templateData.noticeType || 'notice'}_${Date.now()}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          letterRendering: true,
+          logging: false 
+        },
         jsPDF: { unit: 'mm', format: 'a4' as const, orientation: 'portrait' as const }
       };
 
-      await html2pdf().from(container).set(opt).save();
+      if (typeof html2pdf !== 'function') {
+        throw new Error("PDF library not initialized. Please refresh and try again.");
+      }
+
+      await html2pdf().from(clone).set(opt).save();
       toast.success("PDF downloaded successfully!", { id: toastId });
-    } catch (e) {
-      toast.error("Failed to generate PDF", { id: toastId });
+    } catch (e: any) {
+      console.error("PDF Error:", e);
+      toast.error(`Failed to generate PDF: ${e.message || "Unknown error"}`, { id: toastId });
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -325,38 +409,44 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
     const printDocument = printIframe.contentWindow?.document;
     if (printDocument) {
+      // Get the preview content or a fallback
+      const element = document.getElementById('document-preview-content');
+      const printContent = element ? element.innerHTML : `
+        <div style="font-family: serif; padding: 20mm;">
+          ${fullPreviewContent}
+        </div>
+      `;
+
       const htmlContent = `<!DOCTYPE html>
 <html>
   <head>
-    <title>Legal Notice Preview</title>
+    <title>${templateData.templateName || 'Legal Notice'}</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        padding: 40px;
-        line-height: 1.6;
-        color: #000;
-        max-width: 210mm;
-        margin: 0 auto;
-      }
-      h1, h2, h3 { text-align: center; }
-      p { margin-bottom: 1em; }
-      hr { margin: 20px 0; border: none; border-top: 1px solid #ccc; }
-      img { max-width: 100%; height: auto; }
-      /* Ensure text styling matches editor */
-      strong, b { font-weight: bold; }
-      em, i { font-style: italic; }
-      ul, ol { padding-left: 2em; margin-bottom: 1em; }
-      ul { list-style-type: disc; }
-      ol { list-style-type: decimal; }
+      @page { size: A4; margin: 0; }
+      body { margin: 0; padding: 0; }
+      /* Include any necessary CSS for DocumentPreview here for the iframe */
+      ${Array.from(document.styleSheets)
+        .filter(sheet => {
+          try { return !sheet.href || sheet.href.startsWith(window.location.origin); }
+          catch(e) { return false; }
+        })
+        .map(sheet => {
+          try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join(''); }
+          catch(e) { return ''; }
+        })
+        .join('\n')}
+      
+      /* Force white background for print */
+      .bg-white { background-color: white !important; }
+      .text-black { color: black !important; }
       
       @media print {
-        body { padding: 0; max-width: none; }
-        @page { margin: 20mm; }
+        body { -webkit-print-color-adjust: exact; }
       }
     </style>
   </head>
-  <body>
-    ${fullPreviewContent}
+  <body onload="window.focus(); window.print();">
+    ${printContent}
   </body>
 </html>`;
       printDocument.open();
@@ -566,7 +656,7 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
             <TemplateEditor
               content={currentContent}
               onChange={handleContentChange}
-              variables={templateData.selectedVariables}
+              variables={[...templateData.selectedVariables, "advocate_sign"]}
               onInsertVariable={handleInsertVariable}
             />
           </TabsContent>
@@ -574,11 +664,12 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
           <TabsContent value="preview" className="p-6">
             <div className="bg-slate-100 dark:bg-gray-900/30 rounded-lg p-4 sm:p-8 flex justify-center overflow-x-auto min-h-[500px]">
               {currentContent ? (
-                <div className="bg-white shadow-lg w-[210mm] min-h-[297mm] p-[20mm] origin-top shrink-0">
-                  <div
-                    className="prose prose-sm max-w-none text-black"
-                    style={{ fontFamily: "Arial, sans-serif", lineHeight: "1.6" }}
-                    dangerouslySetInnerHTML={{ __html: fullPreviewContent }}
+                <div id="document-preview-content">
+                  <DocumentPreview 
+                    template={{ 
+                      ...templateData, 
+                      content: currentContent 
+                    }} 
                   />
                 </div>
               ) : (
@@ -598,7 +689,14 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
           className="bg-blue-600 hover:bg-blue-700"
         >
           <Save className="w-4 h-4 mr-2" />
-          Save All Languages
+          Save Locally
+        </Button>
+        <Button
+          onClick={handleSaveToFolder}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          Save to Notice Folder
         </Button>
         <Button
           onClick={handlePrint}
@@ -622,6 +720,23 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
           <FileText className="w-4 h-4 mr-2" />
           Create New Template
         </Button>
+      </div>
+
+      {/* Hidden container for PDF export that's always in the DOM */}
+      <div 
+        style={{ position: 'absolute', left: '-9999px', top: '0', pointerEvents: 'none' }}
+        aria-hidden="true"
+      >
+        <div id="pdf-export-content">
+          {currentContent ? (
+            <DocumentPreview 
+              template={{ 
+                ...templateData, 
+                content: currentContent 
+              }} 
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ export interface GenerateRequest {
 
 export interface GenerateResponse {
     result?: string;
+    source?: string;
     error?: string;
 }
 
@@ -37,6 +38,7 @@ export interface Advocate {
     state: string;
     address: string;
     bio: string;
+    email?: string;
     signature?: string; // Base64 or URL
 }
 
@@ -103,4 +105,82 @@ export async function generateNoticeContent(prompt: string, context: any, messag
         }
         throw error;
     }
+}
+
+export async function searchTemplates(lender: string, type: string): Promise<string[]> {
+    try {
+        const response = await fetch(`${LOCAL_API_BASE}/api/templates/search?lender=${encodeURIComponent(lender)}&type=${encodeURIComponent(type)}`);
+        if (!response.ok) throw new Error("Search failed");
+        return await response.json();
+    } catch (error) {
+        console.error("Error searching templates:", error);
+        return [];
+    }
+}
+
+export async function analyzeTemplate(templateName: string): Promise<{ placeholders: string[] }> {
+    const response = await fetch(`${LOCAL_API_BASE}/api/templates/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateName }),
+    });
+    if (!response.ok) throw new Error("Analysis failed");
+    return await response.json();
+}
+
+export async function saveTemplateToFolder(lender: string, type: string, content: string): Promise<boolean> {
+    const response = await fetch(`${LOCAL_API_BASE}/api/templates/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lender, type, content }),
+    });
+    return response.ok;
+}
+
+export async function mapVariablesML(placeholders: string[], sourceColumns: string[]): Promise<{ placeholder: string, suggested_column: string, confidence: number }[]> {
+    try {
+        const response = await fetch(`${LOCAL_API_BASE}/api/ml/map-variables`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ placeholders, source_columns: sourceColumns }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "ML Mapping failed");
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error in ML Mapping:", error);
+        throw error;
+    }
+}
+
+export interface NoticeType {
+    id: string;
+    title: string;
+    description: string;
+    icon?: string;
+    color?: string;
+}
+
+export async function getNoticeTypes(): Promise<NoticeType[]> {
+    try {
+        const response = await fetch(`${LOCAL_API_BASE}/api/notice-types?t=${Date.now()}`);
+        if (!response.ok) throw new Error("Failed to fetch notice types");
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching notice types:", error);
+        return [];
+    }
+}
+
+export async function createNoticeType(noticeType: Partial<NoticeType>): Promise<NoticeType> {
+    const response = await fetch(`${LOCAL_API_BASE}/api/notice-types`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(noticeType),
+    });
+    if (!response.ok) throw new Error("Failed to create notice type");
+    const data = await response.json();
+    return data.noticeType;
 }

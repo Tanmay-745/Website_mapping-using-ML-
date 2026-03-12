@@ -14,7 +14,7 @@ import { AIAssistant } from "./components/AIAssistant";
 
 import { generateNoticeContent, Advocate } from "./api";
 
-export type NoticeType = "LRN" | "LDN" | "OTS" | "Overdue" | null;
+export type NoticeType = string | null;
 
 export interface TemplateData {
   noticeType: NoticeType;
