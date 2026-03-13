@@ -82,6 +82,19 @@ export function MappingInterface({
     ? availableTargetHeaders
     : availableTargetHeaders.filter((h) => h !== 'barcode');
 
+  const handleToggleManageColumns = () => {
+    if (!showManageColumns) {
+      const password = window.prompt("Enter password to manage target columns:");
+      if (password === "Tanmay123") {
+        setShowManageColumns(true);
+      } else if (password !== null) {
+        alert("Incorrect password!");
+      }
+    } else {
+      setShowManageColumns(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
@@ -272,7 +285,7 @@ export function MappingInterface({
       {/* Manage Target Columns */}
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
         <button
-          onClick={() => setShowManageColumns(!showManageColumns)}
+          onClick={handleToggleManageColumns}
           className="w-full flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">

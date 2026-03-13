@@ -7,10 +7,10 @@
         "dev:barcode": "npm run dev --prefix Barcode-1",
         "dev:mapping": "npm run dev --prefix \"Legal mapping\"",
         "dev:ai": "npm run dev --prefix \"legal pro/AI Legal Portal\"",
-        "dev:dashboard": "npm run dev --prefix dashboard",
+        "dev:dashboard": "npm run dev:dashboard --prefix dashboard -- --open",
         "dev:backend": "python backend/main.py",
         "dev:coverletter": "npm run dev --prefix CoverLetterApp",
-        "dev:all": "concurrently \"npm run dev:barcode\" \"npm run dev:mapping\" \"npm run dev:ai\" \"npm run dev:dashboard\" \"npm run dev:backend\" \"npm run dev:coverletter\"",
+        "dev:all": "concurrently --hide \"barcode,mapping,ai,backend,coverletter\" --kill-others -n \"barcode,mapping,ai,dashboard,backend,coverletter\" \"npm run dev:barcode\" \"npm run dev:mapping\" \"npm run dev:ai\" \"npm run dev:dashboard\" \"npm run dev:backend\" \"npm run dev:coverletter\"",
         "dev": "npm run dev:all"
     },
     "devDependencies": {

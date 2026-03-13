@@ -7,7 +7,7 @@ env.useBrowserCache = true;
 
 // Default Target Columns exactly as they exist in the backend
 export const defaultTargetColumns = [
-    "full name", "dpd", "total outstanding amt", "email", "phone num",
+    "name", "dpd", "total outstanding amt", "email", "phone num",
     "address", "lan", "office Address", "pincode", "language", "state",
     "loan amount", "regional manager", "regional manager phone number",
     "phone number", "mobile number", "agreement date", "city",

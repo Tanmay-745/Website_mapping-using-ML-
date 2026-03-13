@@ -6,7 +6,7 @@ export interface HeaderMapping {
 
 // Common target headers
 export const TARGET_HEADERS = [
-  "full name",
+  "name",
   "dpd",
   "total outstanding amt",
   "email",
@@ -32,8 +32,8 @@ export const TARGET_HEADERS = [
   "co-borrower",
   // System-generated columns required for the mapping UI
   "barcode",
-  "Language 1",
-  "Language 2",
+  "language1",
+  "language2",
   "total outstanding amt",
 ];
 

@@ -131,8 +131,8 @@ export function useCSVMapping() {
         let data = JSON.parse(JSON.stringify(parsedData.data));
         let headers = [...parsedData.headers];
 
-        // 1. Split Full Name Logic (New Feature)
-        const fullNameMapping = activeMappings.find(m => m.targetHeader?.toLowerCase() === 'full name');
+        // 1. Split Name Logic (New Feature)
+        const fullNameMapping = activeMappings.find(m => m.targetHeader?.toLowerCase() === 'name');
         if (fullNameMapping) {
             let maxCoBorrowers = 0;
             data.forEach((row: any) => {
@@ -397,7 +397,7 @@ export function useCSVMapping() {
             const targetMappingsToConsolidate = activeMappings.filter(m => {
                 const h = m.targetHeader?.toLowerCase() || '';
                 return (
-                    h === 'full name' ||
+                    h === 'name' ||
                     h === 'acm name' ||
                     h.includes('name') ||
                     h === 'state' ||
@@ -539,15 +539,15 @@ export function useCSVMapping() {
 
         // 5. Language Generation Logic
         // 5. Language Generation Logic
-        // Check if any USER header maps to Language 1 (excluding our auto generated one to prevent loops)
+        // Check if any USER header maps to language1 (excluding our auto generated one to prevent loops)
         const hasUserMappedLang1 = activeMappings.some(m =>
-            m.targetHeader === 'Language 1' && m.sourceHeader !== 'Language 1 (Auto)'
+            m.targetHeader === 'language1' && m.sourceHeader !== 'language1 (Auto)'
         );
 
         // Check if user explicitly SKIPPED the auto-generated columns (mapped to null)
         // If they skipped it, we should NOT generate it (delete it effectively)
-        const isLang1Skipped = mappings.some(m => m.sourceHeader === 'Language 1 (Auto)' && m.targetHeader === null);
-        const isLang2Skipped = mappings.some(m => m.sourceHeader === 'Language 2 (Auto)' && m.targetHeader === null);
+        const isLang1Skipped = mappings.some(m => m.sourceHeader === 'language1 (Auto)' && m.targetHeader === null);
+        const isLang2Skipped = mappings.some(m => m.sourceHeader === 'language2 (Auto)' && m.targetHeader === null);
 
         // Or if source has "language" in it
         const hasSourceLanguage = headers.some(h => h.toLowerCase().includes('language'));
@@ -562,7 +562,7 @@ export function useCSVMapping() {
             const addressHeader = addressMapping?.sourceHeader || headers.find(h => h.toLowerCase().includes('address'));
 
             data = data.map((row: any) => {
-                const newRow = { ...row, 'Language 1 (Auto)': 'English' };
+                const newRow = { ...row, 'language1 (Auto)': 'English' };
                 let lang2 = '';
                 let loc = '';
 
@@ -609,7 +609,7 @@ export function useCSVMapping() {
                             break;
                         }
                     } else {
-                        // For full names like 'maharashtra', a substring match is fine
+                        // For names like 'maharashtra', a substring match is fine
                         if (loc.includes(state)) {
                             lang2 = language;
                             break;
@@ -618,17 +618,17 @@ export function useCSVMapping() {
                 }
 
                 if (lang2) {
-                    newRow['Language 2 (Auto)'] = lang2;
+                    newRow['language2 (Auto)'] = lang2;
                 }
                 return newRow;
             });
 
             // Ensure our auto-generated headers are added to the list if they exist in the data and aren't skipped
-            if (!isLang1Skipped && data.some((r: any) => r['Language 1 (Auto)']) && !headers.includes('Language 1 (Auto)')) {
-                headers.push('Language 1 (Auto)');
+            if (!isLang1Skipped && data.some((r: any) => r['language1 (Auto)']) && !headers.includes('language1 (Auto)')) {
+                headers.push('language1 (Auto)');
             }
-            if (!isLang2Skipped && data.some((r: any) => r['Language 2 (Auto)']) && !headers.includes('Language 2 (Auto)')) {
-                headers.push('Language 2 (Auto)');
+            if (!isLang2Skipped && data.some((r: any) => r['language2 (Auto)']) && !headers.includes('language2 (Auto)')) {
+                headers.push('language2 (Auto)');
             }
         }
 
@@ -808,8 +808,8 @@ export function useCSVMapping() {
                     if (genHeader === 'Notice (Auto)') defaultTarget = 'notice';
                     if (genHeader === 'Total Outstanding (Auto)') defaultTarget = 'total outstanding amt';
                     if (genHeader === 'Barcode (Auto)') defaultTarget = 'barcode';
-                    if (genHeader === 'Language 1 (Auto)') defaultTarget = 'Language 1';
-                    if (genHeader === 'Language 2 (Auto)') defaultTarget = 'Language 2';
+                    if (genHeader === 'language1 (Auto)') defaultTarget = 'language1';
+                    if (genHeader === 'language2 (Auto)') defaultTarget = 'language2';
 
                     // If genHeader is "LRN 1", defaultTarget should probably be "LRN 1"
                     // because the user wants to see "LRN 1", "LRN 2" in the final export?
