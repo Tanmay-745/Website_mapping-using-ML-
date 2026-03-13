@@ -636,8 +636,12 @@ async function generateMergedPdf(envelopesData, headerImagePath, filename, sende
     }
 }
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
 
 

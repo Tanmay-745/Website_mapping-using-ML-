@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/dashboard/(.*)", "destination": "/dashboard/$1" },
+    { "source": "/mapping/(.*)", "destination": "/mapping/$1" },
+    { "source": "/barcode/(.*)", "destination": "/barcode/$1" },
+    { "source": "/coverletter/(.*)", "destination": "/CoverLetterApp/api/index.js" },
+    { "source": "/coverletter", "destination": "/CoverLetterApp/api/index.js" },
+    { "source": "/(.*)", "destination": "/$1" }
+  ]
+}
