@@ -1,5 +1,4 @@
-
-const API_BASE = "http://localhost:54321/functions/v1/server"; // Adjust based on your local Supabase setup or production URL
+const API_BASE = "http://localhost:54321";
 
 export interface GenerateRequest {
     prompt: string;
@@ -26,25 +25,24 @@ export async function checkServerHealth(): Promise<boolean> {
     }
 }
 
-const LOCAL_API_BASE = "http://localhost:54321";
-
 export interface Advocate {
-    id?: string;
+    id: string;
     name: string;
     phone: string;
-    companyName: string;
-    city: string;
-    pinCode: string;
-    state: string;
-    address: string;
-    bio: string;
+    companyName?: string;
+    city?: string;
+    pincode?: string;
+    state?: string;
+    address?: string;
+    bio?: string; // Existing, can be repurposed or kept
     email?: string;
-    signature?: string; // Base64 or URL
+    signature?: string; // Image URL/Base64
+    headerHtml?: string; // Custom HTML for PDF header
 }
 
 export async function getAdvocates(): Promise<Advocate[]> {
     try {
-        const response = await fetch(`${LOCAL_API_BASE}/api/advocates?t=${Date.now()}`);
+        const response = await fetch(`${API_BASE}/api/advocates?t=${Date.now()}`);
         if (!response.ok) throw new Error("Failed to fetch advocates");
         return await response.json();
     } catch (error) {
@@ -54,7 +52,7 @@ export async function getAdvocates(): Promise<Advocate[]> {
 }
 
 export async function saveAdvocate(advocate: Advocate): Promise<Advocate> {
-    const response = await fetch(`${LOCAL_API_BASE}/api/advocates`, {
+    const response = await fetch(`${API_BASE}/api/advocates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(advocate),
@@ -65,7 +63,7 @@ export async function saveAdvocate(advocate: Advocate): Promise<Advocate> {
 }
 
 export async function deleteAdvocate(id: string): Promise<void> {
-    const response = await fetch(`${LOCAL_API_BASE}/api/advocates?id=${id}`, {
+    const response = await fetch(`${API_BASE}/api/advocates?id=${id}`, {
         method: "DELETE",
     });
     if (!response.ok) throw new Error("Failed to delete advocate");
@@ -107,9 +105,34 @@ export async function generateNoticeContent(prompt: string, context: any, messag
     }
 }
 
+export async function translateText(text: string, targetLang: string): Promise<string> {
+    try {
+        const response = await fetch(`${API_BASE}/api/translate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text, target_lang: targetLang }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        
+        return data.translated_text || data.translatedText;
+    } catch (error) {
+        console.error("Failed to translate text:", error);
+        throw error;
+    }
+}
+
 export async function searchTemplates(lender: string, type: string): Promise<string[]> {
     try {
-        const response = await fetch(`${LOCAL_API_BASE}/api/templates/search?lender=${encodeURIComponent(lender)}&type=${encodeURIComponent(type)}`);
+        const response = await fetch(`${API_BASE}/api/templates/search?lender=${encodeURIComponent(lender)}&type=${encodeURIComponent(type)}`);
         if (!response.ok) throw new Error("Search failed");
         return await response.json();
     } catch (error) {
@@ -119,7 +142,7 @@ export async function searchTemplates(lender: string, type: string): Promise<str
 }
 
 export async function analyzeTemplate(templateName: string): Promise<{ placeholders: string[] }> {
-    const response = await fetch(`${LOCAL_API_BASE}/api/templates/analyze`, {
+    const response = await fetch(`${API_BASE}/api/templates/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ templateName }),
@@ -129,7 +152,7 @@ export async function analyzeTemplate(templateName: string): Promise<{ placehold
 }
 
 export async function saveTemplateToFolder(lender: string, type: string, content: string): Promise<boolean> {
-    const response = await fetch(`${LOCAL_API_BASE}/api/templates/save`, {
+    const response = await fetch(`${API_BASE}/api/templates/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lender, type, content }),
@@ -139,7 +162,7 @@ export async function saveTemplateToFolder(lender: string, type: string, content
 
 export async function mapVariablesML(placeholders: string[], sourceColumns: string[]): Promise<{ placeholder: string, suggested_column: string, confidence: number }[]> {
     try {
-        const response = await fetch(`${LOCAL_API_BASE}/api/ml/map-variables`, {
+        const response = await fetch(`${API_BASE}/api/ml/map-variables`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ placeholders, source_columns: sourceColumns }),
@@ -165,7 +188,7 @@ export interface NoticeType {
 
 export async function getNoticeTypes(): Promise<NoticeType[]> {
     try {
-        const response = await fetch(`${LOCAL_API_BASE}/api/notice-types?t=${Date.now()}`);
+        const response = await fetch(`${API_BASE}/api/notice-types?t=${Date.now()}`);
         if (!response.ok) throw new Error("Failed to fetch notice types");
         return await response.json();
     } catch (error) {
@@ -175,7 +198,7 @@ export async function getNoticeTypes(): Promise<NoticeType[]> {
 }
 
 export async function createNoticeType(noticeType: Partial<NoticeType>): Promise<NoticeType> {
-    const response = await fetch(`${LOCAL_API_BASE}/api/notice-types`, {
+    const response = await fetch(`${API_BASE}/api/notice-types`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(noticeType),
@@ -183,4 +206,50 @@ export async function createNoticeType(noticeType: Partial<NoticeType>): Promise
     if (!response.ok) throw new Error("Failed to create notice type");
     const data = await response.json();
     return data.noticeType;
+}
+
+export interface Lender {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    logo?: string;
+    signature?: string;
+}
+
+export async function getLenders(): Promise<Lender[]> {
+    try {
+        const response = await fetch(`${API_BASE}/api/lenders`);
+        if (!response.ok) throw new Error("Failed to fetch lenders");
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching lenders:", error);
+        return [];
+    }
+}
+
+export async function saveLender(lender: Partial<Lender>): Promise<Lender> {
+    const response = await fetch(`${API_BASE}/api/lenders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lender),
+    });
+    if (!response.ok) throw new Error("Failed to save lender");
+    const data = await response.json();
+    return data.lender;
+}
+
+export async function deleteLender(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/api/lenders?id=${id}`, {
+        method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete lender");
+}
+
+export async function deleteNoticeType(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/api/notice-types?id=${id}`, {
+        method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete notice type");
 }

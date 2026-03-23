@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { TemplateData, SavedTemplate } from "../App";
-import { FileText, Save, Mail, Printer, Edit3, Sparkles } from "lucide-react";
+import { FileText, Save, Mail, Printer, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import { TemplateEditor } from "./TemplateEditor";
-import { generateNoticeContent, saveTemplateToFolder, analyzeTemplate, getNoticeTypes } from "../api";
+import { VariableSidePanel } from "./VariableSidePanel";
+import { generateNoticeContent, saveTemplateToFolder, analyzeTemplate, getNoticeTypes, translateText } from "../api";
 import {
   Select,
   SelectContent,
@@ -16,7 +17,6 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Label } from "./ui/label";
-import { Languages } from "lucide-react";
 // @ts-ignore
 import html2pdf from "html2pdf.js";
 import { DocumentPreview } from "./DocumentPreview";
@@ -26,19 +26,30 @@ interface NoticePreviewProps {
   onStartNew: () => void;
 }
 
-// Note: noticeTypeNames is now handled by state inside the component
+const languageMap: Record<string, string> = {
+  English: "en",
+  Hindi: "hi",
+  Marathi: "mr",
+  Gujarati: "gu",
+  Tamil: "ta",
+  Telugu: "te",
+  Kannada: "kn",
+  Bengali: "bn",
+  Punjabi: "pa",
+  Malayalam: "ml",
+  Odia: "or",
+  Assamese: "as",
+  Punjabi_pa: "pa", // Fallback
+};
 
 // Generate initial template content
 function generateInitialContent(templateData: TemplateData): string {
-  const { noticeType, lender, advocate, selectedVariables, advocateDetails } = templateData;
+  const { noticeType, lender, advocate, selectedVariables, advocateDetails, lenderDetails } = templateData;
   const date = new Date().toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
-
-
-
 
   const getVar = (possibleNames: string[]) => {
     for (const name of possibleNames) {
@@ -49,6 +60,10 @@ function generateInitialContent(templateData: TemplateData): string {
     }
     return "[VARIABLE_NOT_SELECTED]";
   };
+
+  const lenderName = lenderDetails?.name || lender;
+  const lenderAddress = lenderDetails?.address || "";
+  const lenderContact = lenderDetails?.phone || "";
 
   let content = "";
 
@@ -61,14 +76,15 @@ function generateInitialContent(templateData: TemplateData): string {
 <p><strong>From:</strong><br/>
 ${advocate}<br/>
 Advocate & Legal Counsel<br/>
-For and on behalf of ${lender}</p>
+For and on behalf of ${lenderName}<br/>
+${lenderAddress}</p>
 <p><strong>To:</strong><br/>
 ${getVar(['borrower_name', 'customer_name', 'name'])}<br/>
 ${getVar(['borrower_address', 'address', 'customer_address'])}</p>
 <hr/>
 <p><strong>Subject:</strong> Legal Recovery Notice for Outstanding Dues - Account No. ${getVar(['account_number', 'account_no', 'loan_account'])}</p>
 <p>Dear Sir/Madam,</p>
-<p>I, ${advocate}, Advocate, am writing this notice on behalf of my client, ${lender}, regarding your loan account.</p>
+<p>I, ${advocate}, Advocate, am writing this notice on behalf of my client, ${lenderName}, regarding your loan account.</p>
 <h3>1. ACCOUNT PARTICULARS:</h3>
 <p><strong>Loan Account Number:</strong> ${getVar(['account_number', 'account_no', 'loan_account'])}<br/>
 <strong>Loan Agreement Date:</strong> ${getVar(['loan_date', 'agreement_date'])}</p>
@@ -94,7 +110,7 @@ ${getVar(['borrower_address', 'address', 'customer_address'])}</p>
 <p>Yours faithfully,</p>
 <p><strong>${advocate}</strong><br/>
 Advocate<br/>
-For ${lender}</p>
+For ${lenderName}</p>
 <hr/>
 <p><em><strong>IMPORTANT:</strong> This is a legal notice. Ignoring this notice may result in severe legal action.</em></p>
 `;
@@ -106,7 +122,8 @@ For ${lender}</p>
 <p><strong>Date:</strong> ${date}</p>
 <p><strong>From:</strong><br/>
 ${advocate}<br/>
-For and on behalf of ${lender}</p>
+For and on behalf of ${lenderName}<br/>
+${lenderAddress}</p>
 <p><strong>To:</strong><br/>
 ${getVar(['borrower_name', 'customer_name', 'name'])}<br/>
 ${getVar(['borrower_address', 'address'])}</p>
@@ -114,7 +131,7 @@ ${getVar(['borrower_address', 'address'])}</p>
 <p><strong>Subject:</strong> LEGAL DEMAND NOTICE - IMMEDIATE PAYMENT REQUIRED<br/>
 Re: Account No. ${getVar(['account_number', 'account_no'])}</p>
 <p>Dear Sir/Madam,</p>
-<p>Under the instructions and on behalf of my client, ${lender}, I hereby serve upon you this LEGAL DEMAND NOTICE regarding your default in payment obligations.</p>
+<p>Under the instructions and on behalf of my client, ${lenderName}, I hereby serve upon you this LEGAL DEMAND NOTICE regarding your default in payment obligations.</p>
 <h3>AMOUNT DUE AND IMMEDIATELY PAYABLE:</h3>
 <p><strong>Total Outstanding Amount:</strong> ${getVar(['total_amount', 'total_due'])}</p>
 <h3>DEMAND:</h3>
@@ -131,7 +148,7 @@ Re: Account No. ${getVar(['account_number', 'account_no'])}</p>
 <p>Yours faithfully,</p>
 <p><strong>${advocate}</strong><br/>
 Advocate<br/>
-For ${lender}</p>
+For ${lenderName}</p>
 `;
   } else if (noticeType === "OTS") {
     content = `
@@ -140,7 +157,8 @@ For ${lender}</p>
 <hr/>
 <p><strong>Date:</strong> ${date}<br/>
 <strong>Reference No.:</strong> OTS/${getVar(['account_number'])}/2026</p>
-<p><strong>From:</strong> ${lender}<br/>
+<p><strong>From:</strong> ${lenderName}<br/>
+${lenderAddress}<br/>
 <strong>Through:</strong> ${advocate}</p>
 <p><strong>To:</strong><br/>
 ${getVar(['borrower_name', 'customer_name', 'name'])}<br/>
@@ -148,7 +166,7 @@ ${getVar(['borrower_address', 'address'])}</p>
 <hr/>
 <p><strong>Subject:</strong> One Time Settlement (OTS) Proposal - Account No. ${getVar(['account_number'])}</p>
 <p>Dear ${getVar(['borrower_name', 'customer_name', 'name'])},</p>
-<p>This communication is in reference to your loan account with ${lender}.</p>
+<p>This communication is in reference to your loan account with ${lenderName}.</p>
 <h3>1. CURRENT ACCOUNT STATUS:</h3>
 <p><strong>Account Number:</strong> ${getVar(['account_number'])}<br/>
 <strong>Classification:</strong> NPA (Non-Performing Asset)</p>
@@ -158,7 +176,7 @@ ${getVar(['borrower_address', 'address'])}</p>
 <strong>Penalty & Other Charges:</strong> ${getVar(['penalty_amount'])}<br/>
 <strong>Total Outstanding Amount:</strong> ${getVar(['total_amount', 'total_due'])}</p>
 <h3>3. ONE TIME SETTLEMENT OFFER:</h3>
-<p>In the spirit of amicable resolution and to avoid protracted legal proceedings, ${lender} is pleased to extend to you a ONE TIME SETTLEMENT opportunity.</p>
+<p>In the spirit of amicable resolution and to avoid protracted legal proceedings, ${lenderName} is pleased to extend to you a ONE TIME SETTLEMENT opportunity.</p>
 <p><strong>SETTLEMENT AMOUNT:</strong> ${getVar(['settlement_amount', 'ots_amount'])}</p>
 <h3>4. TERMS AND CONDITIONS OF SETTLEMENT:</h3>
 <ul>
@@ -169,7 +187,7 @@ ${getVar(['borrower_address', 'address'])}</p>
 </ul>
 <p>We trust that you will consider this offer seriously and take appropriate action within the stipulated timeframe.</p>
 <p>Yours sincerely,</p>
-<p>For <strong>${lender}</strong></p>
+<p>For <strong>${lenderName}</strong></p>
 `;
   } else {
     content = `
@@ -177,7 +195,8 @@ ${getVar(['borrower_address', 'address'])}</p>
 <p style="text-align: center;"><em>(Payment Reminder)</em></p>
 <hr/>
 <p><strong>Date:</strong> ${date}</p>
-<p><strong>From:</strong> ${lender}<br/>
+<p><strong>From:</strong> ${lenderName}<br/>
+${lenderAddress}<br/>
 Collections & Recovery Department</p>
 <p><strong>To:</strong><br/>
 ${getVar(['borrower_name', 'customer_name', 'name'])}<br/>
@@ -186,7 +205,7 @@ ${getVar(['borrower_address', 'address'])}</p>
 <p><strong>Subject:</strong> URGENT - Overdue Payment Notice<br/>
 Account No. ${getVar(['account_number'])}</p>
 <p>Dear ${getVar(['borrower_name', 'customer_name', 'name'])},</p>
-<p>This is to bring to your kind attention that your loan account with ${lender} has become OVERDUE and immediate action is required from your end.</p>
+<p>This is to bring to your kind attention that your loan account with ${lenderName} has become OVERDUE and immediate action is required from your end.</p>
 <h3>1. ACCOUNT DETAILS:</h3>
 <p><strong>Loan Account Number:</strong> ${getVar(['account_number'])}<br/>
 <strong>Due Date:</strong> ${getVar(['due_date', 'payment_due_date'])}<br/>
@@ -199,7 +218,7 @@ Account No. ${getVar(['account_number'])}</p>
 <p>You are requested to make the payment of <strong>${getVar(['total_amount', 'total_due'])}</strong> IMMEDIATELY to regularize your account and avoid further consequences.</p>
 <p>Please treat this matter with urgency.</p>
 <p>Yours sincerely,</p>
-<p>For <strong>${lender}</strong><br/>
+<p>For <strong>${lenderName}</strong><br/>
 Collections & Recovery Department</p>
 `;
   }
@@ -276,6 +295,15 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
   const [currentLanguage, setCurrentLanguage] = useState("English");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showVariables, setShowVariables] = useState(false);
+  const editorRef = useRef<any>(null);
+
+  // Analyze variable usage
+  const usedVariables = useMemo(() => {
+    const regex = /\$\{([^}]+)\}/g;
+    const matches = [...(contentMap[currentLanguage] || "").matchAll(regex)];
+    return new Set(matches.map(m => m[1]));
+  }, [contentMap, currentLanguage]);
 
   // Get current content based on selected language
   const currentContent = contentMap[currentLanguage] || "";
@@ -297,21 +325,57 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
 
   const handleSaveTemplate = () => {
-    // Create template object
-    // Key change: Save the WHOLE map
+    // 1. Prepare the template object
     const template: SavedTemplate = {
       ...templateData,
-      content: contentMap['English'] || "", // Main content is typically English fallback
+      content: contentMap['English'] || "",
       languages: contentMap,
       id: templateData.id || Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
 
-    // Load existing templates
+    // 2. If it belongs to a Theme, save it there
+    if (templateData.id) {
+      const savedThemes = localStorage.getItem("legalPortalThemes");
+      if (savedThemes) {
+        const themes: any[] = JSON.parse(savedThemes);
+        const themeIndex = themes.findIndex(t => t.id === templateData.id);
+        
+        if (themeIndex >= 0) {
+          // Add this template to the theme's templates or update existing for this language?
+          // To keep it simple based on the UI: add a new ThemeTemplate
+          const newTemplate: any = {
+            language: currentLanguage,
+            createdAt: new Date().toLocaleString(),
+            content: currentContent
+          };
+          
+          if (!themes[themeIndex].templates) themes[themeIndex].templates = [];
+          
+          // Check if we should update or append
+          const existingTplIdx = themes[themeIndex].templates.findIndex((t: any) => t.language === currentLanguage);
+          if (existingTplIdx >= 0) {
+            themes[themeIndex].templates[existingTplIdx] = newTemplate;
+          } else {
+            themes[themeIndex].templates.push(newTemplate);
+          }
+          
+          localStorage.setItem("legalPortalThemes", JSON.stringify(themes));
+          toast.success(`Template saved to theme "${themes[themeIndex].name}"`);
+          
+          // Use window.location.reload() or just state update? 
+          // App.tsx handles state, so we just need to signal completion.
+          setIsEditing(false);
+          onStartNew(); // This triggers the exit in App.tsx
+          return;
+        }
+      }
+    }
+
+    // 3. Fallback: Save to standalone templates
     const saved = localStorage.getItem("savedTemplates");
     const templates: SavedTemplate[] = saved ? JSON.parse(saved) : [];
 
-    // Check if updating existing or creating new
     const existingIndex = templates.findIndex(t => t.id === template.id);
     if (existingIndex >= 0) {
       templates[existingIndex] = template;
@@ -321,11 +385,9 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
       toast.success("Template saved successfully!");
     }
 
-    // Save to localStorage
     localStorage.setItem("savedTemplates", JSON.stringify(templates));
-
     setIsEditing(false);
-    onStartNew(); // Redirect to Saved Templates portal
+    onStartNew();
   };
 
   const handleSaveToFolder = async () => {
@@ -379,7 +441,18 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
           scale: 2, 
           useCORS: true, 
           letterRendering: true,
-          logging: false 
+          logging: false,
+          onclone: (doc: Document) => {
+            const elements = doc.getElementsByTagName('*');
+            for (let i = 0; i < elements.length; i++) {
+              const el = elements[i] as HTMLElement;
+              // Strip oklch from variables and force standard colors
+              el.style.setProperty('--background', '#ffffff', 'important');
+              el.style.setProperty('--foreground', '#111827', 'important');
+              el.style.setProperty('--primary', '#111827', 'important');
+              el.style.setProperty('--border', '#e5e7eb', 'important');
+            }
+          }
         },
         jsPDF: { unit: 'mm', format: 'a4' as const, orientation: 'portrait' as const }
       };
@@ -471,9 +544,7 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
 
   const handleInsertVariable = (variable: string) => {
-    toast.info(`Variable \${${variable}} inserted (cursor support pending in editor)`);
-    // Note: TemplateEditor needs to support inserting at cursor. 
-    // For now, user copies it. Or we need to pass this down.
+    toast.success(`Variable \${${variable}} inserted at cursor`);
   };
 
   return (
@@ -533,13 +604,35 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
             <div className="flex items-center gap-2 mb-2 sm:mb-0">
               <Label className="text-sm font-medium text-slate-600 dark:text-gray-300">Language:</Label>
               <div className="w-[140px]">
-                <Select value={currentLanguage} onValueChange={(lang) => {
-                  // Check if language exists, if not, maybe initialize it?
-                  // For now, just switch. Content will be empty string if not exists.
-                  if (!contentMap[lang] && lang !== 'English') {
-                    toast.info(`No content for ${lang} yet. content will be empty.`);
-                  }
+                <Select value={currentLanguage} onValueChange={async (lang) => {
                   setCurrentLanguage(lang);
+                  
+                  // If switching to a language that has no content yet
+                  if (!contentMap[lang] || contentMap[lang].trim() === "") {
+                    // Try to translate from English
+                    const sourceContent = contentMap["English"];
+                    if (sourceContent && lang !== "English") {
+                      const toastId = toast.loading(`Translating to ${lang}...`);
+                      try {
+                        const targetCode = languageMap[lang] || "en";
+                        const translated = await translateText(sourceContent, targetCode);
+                        
+                        setContentMap(prev => ({
+                          ...prev,
+                          [lang]: translated
+                        }));
+                        toast.success(`Translated to ${lang} successfully!`, { id: toastId });
+                      } catch (err: any) {
+                        console.error("Auto-translation failed:", err);
+                        toast.error(`Auto-translation to ${lang} failed. Using English as base.`, { id: toastId });
+                        // Copy English as base if translation fails
+                        setContentMap(prev => ({
+                          ...prev,
+                          [lang]: sourceContent
+                        }));
+                      }
+                    }
+                  }
                 }}>
                   <SelectTrigger className="h-8">
                     <SelectValue placeholder="Language" />
@@ -565,100 +658,36 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
           <TabsContent value="edit" className="p-6">
             <div className="mb-4">
-              <div className="flex flex-col gap-4 mb-4 p-4 bg-slate-50 dark:bg-gray-900/50 rounded-lg border border-slate-200 dark:border-gray-700/50">
-                <div>
-                  <h4 className="font-semibold text-sm text-slate-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    AI Assistant
-                  </h4>
-                </div>
-
-                <div className="flex flex-wrap gap-4 items-end">
-                  {/* Generate Button - Only for English usually? Or generate directly in target? */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/40"
-                    onClick={async () => {
-                      const toastId = toast.loading(`Generating ${currentLanguage} content...`);
-                      try {
-                        const generatedContent = await generateNoticeContent(
-                          `Draft a comprehensive legal notice for a "${noticeTypeNames[templateData.noticeType!]}" sent by "${templateData.lender}" to a borrower.
-                          Context: ${templateData.description}.
-                          Variables to include: ${templateData.selectedVariables.join(", ")}.
-                          Language: ${currentLanguage}.
-                          Make it professional, legally sound, and formatted in HTML suitable for a rich text editor.`,
-                          { type: "content", ...templateData }
-                        );
-                        handleContentChange(generatedContent);
-                        toast.success("Content generated successfully!", { id: toastId });
-                      } catch (e: any) {
-                        const errorMessage = e.message || "Failed to generate content";
-                        toast.error(errorMessage, { id: toastId });
-                      }
-                    }}
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Auto-Generate ({currentLanguage})
-                  </Button>
-
-                  <div className="h-8 w-px bg-slate-300 mx-2 hidden sm:block"></div>
-
-                  <div className="flex items-center gap-2">
-                    {/* Translate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-900 dark:hover:bg-indigo-900/40"
-                      onClick={async () => {
-                        const sourceLang = "English";
-                        const sourceContent = contentMap[sourceLang];
-
-                        if (!sourceContent) {
-                          toast.error("No English content to translate from.");
-                          return;
-                        }
-                        if (currentLanguage === "English") {
-                          toast.info("Already in English. Switch language to translate.");
-                          return;
-                        }
-
-                        const toastId = toast.loading(`Translating English to ${currentLanguage}...`);
-                        try {
-                          const translatedContent = await generateNoticeContent(
-                            `Translate the following legal notice content into ${currentLanguage}.
-                            IMPORTANT: 
-                            1. Maintain the HTML structure, formatting, and all variables (like \${variable_name}) exactly as they are.
-                            2. Only translate the text content.
-                            3. Maintain the legal tone and formal language appropriate for ${currentLanguage}.
-                            
-                            Content to translate:
-                            ${sourceContent}`,
-                            { type: "translation", targetLanguage: currentLanguage, ...templateData }
-                          );
-                          handleContentChange(translatedContent);
-                          toast.success(`Translated to ${currentLanguage} successfully!`, { id: toastId });
-                        } catch (e: any) {
-                          const errorMessage = e.message || "Failed to translate content";
-                          toast.error(errorMessage, { id: toastId });
-                        }
-                      }}
-                    >
-                      <Languages className="w-4 h-4 mr-2" />
-                      Translate English to {currentLanguage}
-                    </Button>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* EDITOR */}
-            <TemplateEditor
-              content={currentContent}
-              onChange={handleContentChange}
-              variables={[...templateData.selectedVariables, "advocate_sign"]}
-              onInsertVariable={handleInsertVariable}
-            />
+            <div className="flex gap-6 items-start mt-4">
+              <div className="flex-1 bg-white dark:bg-gray-950 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-gray-800 shadow-sm transition-all">
+                <TemplateEditor
+                  ref={editorRef}
+                  content={currentContent}
+                  onChange={handleContentChange}
+                  variables={[...new Set([...templateData.selectedVariables, "advocate_sign", "barcode", "signature"])]}
+                  amountVariables={templateData.amountVariables || []}
+                  onInsertVariable={handleInsertVariable}
+                  onToggleVariables={() => setShowVariables(!showVariables)}
+                  showVariables={showVariables}
+                />
+              </div>
+
+              {showVariables && (
+                <div className="animate-in slide-in-from-right duration-300 min-h-[500px]">
+                  <VariableSidePanel 
+                    variables={[...new Set([...templateData.selectedVariables, "advocate_sign", "barcode", "signature"])]}
+                    amountVariables={templateData.amountVariables || []}
+                    usedVariables={usedVariables}
+                    onInsert={(v: string) => {
+                      editorRef.current?.insertVariable(v);
+                    }}
+                    onClose={() => setShowVariables(false)}
+                  />
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="preview" className="p-6">

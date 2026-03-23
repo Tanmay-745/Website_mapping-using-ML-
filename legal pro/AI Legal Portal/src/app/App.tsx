@@ -1,57 +1,100 @@
 import { useState, useEffect } from "react";
-import { NoticeTypeSelection } from "./components/NoticeTypeSelection";
-import { TemplateDetailsForm } from "./components/TemplateDetailsForm";
-import { VariableConfiguration } from "./components/VariableConfiguration";
-import { NoticePreview } from "./components/NoticePreviewWithEditor";
-import { SavedTemplates } from "./components/SavedTemplates";
-import { Button } from "./components/ui/button";
-import { Card } from "./components/ui/card";
-import { FileText, ArrowLeft } from "lucide-react";
 import { Header } from "./components/Header";
+import { Button } from "./components/ui/button";
+import { X } from "lucide-react";
+import { ThemesDashboard } from "./components/ThemesDashboard";
+import { AdvocateRegistry } from "./components/AdvocateRegistry";
+import { EditThemeModal } from "./components/EditThemeModal";
+import { NoticePreview } from "./components/NoticePreviewWithEditor";
+import { TemplateEditorModal } from "./components/TemplateEditorModal";
+import { AIAssistant } from "./components/AIAssistant";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
-import { AIAssistant } from "./components/AIAssistant";
+import { generateNoticeContent, Advocate, Lender } from "./api";
+import { LenderRegistry } from "./components/LenderRegistry";
+import { getFallbackTemplate } from "./utils/templates_fallback";
 
-import { generateNoticeContent, Advocate } from "./api";
-
-export type NoticeType = string | null;
+export type NoticeType = string;
 
 export interface TemplateData {
-  noticeType: NoticeType;
+  id?: string;
   templateName: string;
   description: string;
   lender: string;
   advocate: string;
-  csvHeaders: string[];
+  noticeType: NoticeType;
+  deliveryMode: "digital" | "physical";
   selectedVariables: string[];
   amountVariables: string[];
-  deliveryMode: "physical" | "digital";
-  content?: string; // HTML content from editor
-  id?: string; // Template ID
-  sampleData?: Record<string, string>[]; // Sample data from CSV
-  importedDeliveryMode?: "physical" | "digital"; // Original mode from CSV import
+  csvHeaders: string[];
+  sampleData?: Record<string, string>[];
+  content?: string;
+  languages?: Record<string, string>;
   advocateDetails?: Advocate;
-  languages?: Record<string, string>; // Map of language code/name to content HTML
+  lenderDetails?: Lender;
+  importedDeliveryMode?: string;
 }
 
 export interface SavedTemplate extends TemplateData {
   id: string;
   createdAt: string;
+  content: string;
+}
+
+export type AppTab = "themes" | "advocates" | "digital" | "physical" | "lenders";
+
+export interface ThemeTemplate {
+  content: string;
+  createdAt: string;
+  language: string;
+}
+
+export interface Theme {
+  id: string;
+  name: string;
+  description: string;
+  lender: string;
+  date: string;
+  advocates: string[];
+  noticeTypes: string[];
+  templates: ThemeTemplate[];
+  csvHeaders?: string[];
+  selectedVariables?: string[];
+  amountVariables?: string[];
+  isPhysical?: boolean;
+  sampleData?: Record<string, string>[];
 }
 
 function App() {
-  const [step, setStep] = useState<"start" | "type" | "details" | "variables" | "preview">("type");
-  const [templateData, setTemplateData] = useState<TemplateData>({
-    noticeType: null,
-    templateName: "",
-    description: "",
-    lender: "",
-    advocate: "",
-    csvHeaders: [],
-    selectedVariables: [],
-    amountVariables: [],
-    deliveryMode: "digital",
-  });
+  const [activeTab, setActiveTab] = useState<AppTab>("themes");
+  const [themes, setThemes] = useState<Theme[]>([]);
+  const [isAddingTheme, setIsAddingTheme] = useState(false);
+  const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
+  const [editingTemplateData, setEditingTemplateData] = useState<TemplateData | null>(null);
+
+  useEffect(() => {
+    // Load themes from local storage or API
+    const saved = localStorage.getItem("legalPortalThemes");
+    if (saved) {
+      setThemes(JSON.parse(saved));
+    } else {
+      const sampleThemes: Theme[] = [{
+        id: "1",
+        name: "Standard Recovery Notice (LRN)",
+        description: "Standard legal recovery notice for delinquent accounts.",
+        lender: "HDFC BANK",
+        date: "19-03-2026",
+        advocates: ["Adv. Rajesh Kumar"],
+        noticeTypes: ["LRN"],
+        templates: [
+          { language: "English", createdAt: "2026-03-19 10:00", content: "<h1>LEGAL NOTICE</h1><p>Dear Customer, you owe us money.</p>" },
+          { language: "Hindi", createdAt: "2026-03-19 10:05", content: "<h1>कानूनी नोटिस</h1><p>प्रिय ग्राहक, आपका भुगतान बकाया है।</p>" }
+        ]
+      }];
+      setThemes(sampleThemes);
+      localStorage.setItem("legalPortalThemes", JSON.stringify(sampleThemes));
+    }
+  }, []);
 
   useEffect(() => {
     const handleThemeChange = (event: MessageEvent) => {
@@ -67,207 +110,210 @@ function App() {
     return () => window.removeEventListener('message', handleThemeChange);
   }, []);
 
-  const fetchSharedData = async () => {
-    try {
-      const response = await fetch('http://localhost:54321/api/share-data');
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.headers && Array.isArray(data.headers)) {
-          // Check for stale data (older than 15 minutes)
-          const MAX_AGE = 15 * 60 * 1000; // 15 minutes
-          const now = Date.now();
-          if (data.timestamp && (now - data.timestamp > MAX_AGE)) {
-            console.log("Ignoring stale shared data");
-            return;
-          }
-
-          toast.success("Loaded mapped data from CSV Portal!");
-          setTemplateData(prev => ({
-            ...prev,
-            csvHeaders: data.headers,
-            sampleData: data.sampleData || [],
-            deliveryMode: data.deliveryMode || "digital",
-            importedDeliveryMode: data.deliveryMode,
-            // Auto-select all if it's a new template or no variables selected yet
-            selectedVariables: prev.selectedVariables.length === 0 ? data.headers : prev.selectedVariables
-          }));
-        }
+  const handleSaveTemplateToTheme = (tpl: { language: string, content: string }) => {
+    if (!editingTemplateData?.id) return;
+    
+    const themeIndex = themes.findIndex(t => t.id === editingTemplateData.id);
+    if (themeIndex >= 0) {
+      const updatedThemes = [...themes];
+      const newTemplate = {
+        language: tpl.language,
+        createdAt: new Date().toLocaleString(),
+        content: tpl.content
+      };
+      
+      const theme = { ...updatedThemes[themeIndex] };
+      if (!theme.templates) theme.templates = [];
+      
+      const existingTplIdx = theme.templates.findIndex(t => t.language === tpl.language);
+      if (existingTplIdx >= 0) {
+        theme.templates[existingTplIdx] = newTemplate;
+      } else {
+        theme.templates.push(newTemplate);
       }
-    } catch (e) {
-      console.log("No shared data found or server offline");
+      
+      updatedThemes[themeIndex] = theme;
+      setThemes(updatedThemes);
+      localStorage.setItem("legalPortalThemes", JSON.stringify(updatedThemes));
+      toast.success(`Template saved to theme "${theme.name}"`);
+      setEditingTemplateData(null);
     }
   };
 
-  useEffect(() => {
-    fetchSharedData();
-  }, []);
-
-  useEffect(() => {
-    const handleAppMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'APP_ACTIVATED' && event.data?.appId === 'legal-pro') {
-        if (event.data?.action === 'NEW_TEMPLATE') {
-          // Reset state to start a new template 
-          setTemplateData({
-            noticeType: null,
-            templateName: "",
-            description: "",
-            lender: "",
-            advocate: "",
-            csvHeaders: [],
-            selectedVariables: [],
-            amountVariables: [],
-            deliveryMode: "digital",
-            importedDeliveryMode: undefined,
-          });
-          setStep("type");
-          // Fetch fresh mapped data
-          fetchSharedData();
-        }
-      }
-    };
-
-    window.addEventListener('message', handleAppMessage);
-    return () => window.removeEventListener('message', handleAppMessage);
-  }, []);
-
-  const handleNoticeTypeSelect = (type: NoticeType) => {
-    setTemplateData({ ...templateData, noticeType: type });
-    setStep("details");
-  };
-
-  const handleTemplateDetails = (data: Partial<TemplateData>) => {
-    setTemplateData({ ...templateData, ...data });
-    setStep("variables");
-  };
-
-  const handleVariableConfig = (data: Partial<TemplateData>) => {
-    setTemplateData({ ...templateData, ...data });
-    setStep("preview");
-  };
-
-  const handleStartNew = () => {
-    setTemplateData({
-      noticeType: null,
-      templateName: "",
-      description: "",
-      lender: "",
-      advocate: "",
-      csvHeaders: [],
-      selectedVariables: [],
-      amountVariables: [],
-      deliveryMode: "digital",
-      importedDeliveryMode: undefined,
-    });
-    setStep("start");
-  };
-
-  const handleCloneTemplate = (template: SavedTemplate) => {
-    setTemplateData({
-      ...template,
-      id: undefined, // Remove ID for cloning
-      templateName: template.templateName + " (Copy)",
-    });
-    setStep("preview");
-  };
-
-  const handleEditTemplate = (template: SavedTemplate) => {
-    setTemplateData(template);
-    setStep("preview");
-  };
-
-  const handleBack = () => {
-    if (step === "details") setStep("type");
-    else if (step === "variables") setStep("details");
-    else if (step === "preview") setStep("variables");
-    else if (step === "type") setStep("start");
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-[#F8F9FD] dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
       <Toaster />
+      
+      {/* Header with Tabs matching Image 1 */}
+      <Header 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
 
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 dark:bg-blue-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
-      {/* Header */}
-      <div className="relative z-10">
-        <Header onShowSaved={() => setStep("start")} />
-      </div>
-
-      {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {step !== "start" && step !== "type" && (
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        )}
-
-        {step === "start" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)]">
-            <div className="lg:col-span-7 h-full overflow-y-auto pr-2">
-              <SavedTemplates
-                onClone={handleCloneTemplate}
-                onEdit={handleEditTemplate}
-              />
-            </div>
-
-            <div className="lg:col-span-5 h-full">
-              <Card className="h-full flex flex-col items-center justify-center p-8 text-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all">
-                <div className="bg-gradient-to-br from-blue-500 to-purple-600 w-20 h-20 rounded-2xl shadow-lg flex items-center justify-center mb-6">
-                  <FileText className="w-10 h-10 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-4">
-                  Create New Template
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-xs mx-auto">
-                  Start fresh with our AI-powered template builder to create customized legal notices.
-                </p>
-                <Button
-                  onClick={() => setStep("type")}
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 w-full max-w-xs"
-                >
-                  Create Template
-                </Button>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {step === "type" && (
-          <NoticeTypeSelection onSelect={handleNoticeTypeSelect} onBack={() => setStep("start")} />
-        )}
-
-        {step === "details" && (
-          <TemplateDetailsForm
-            noticeType={templateData.noticeType!}
-            onNext={handleTemplateDetails}
+      <main className="max-w-[1600px] mx-auto px-6 py-4">
+        {activeTab === "themes" && (
+          <ThemesDashboard 
+            themes={themes} 
+            onEditTheme={(theme) => {
+              setEditingTheme(theme);
+              setIsAddingTheme(true);
+            }}
+            onDeleteTheme={(id) => {
+              const updated = themes.filter(t => t.id !== id);
+              setThemes(updated);
+              localStorage.setItem("legalPortalThemes", JSON.stringify(updated));
+            }}
+            onCloneTheme={(theme) => {
+              const cloned = { ...theme, id: Date.now().toString(), name: theme.name + " (Copy)" };
+              const updated = [cloned, ...themes];
+              setThemes(updated);
+              localStorage.setItem("legalPortalThemes", JSON.stringify(updated));
+              toast.success("Theme cloned successfully!");
+            }}
+            onAddTemplate={(theme) => {
+              setEditingTemplateData({
+                templateName: theme.name,
+                description: theme.description,
+                lender: theme.lender,
+                advocate: theme.advocates[0] || "",
+                noticeType: theme.noticeTypes[0] || "LRN",
+                deliveryMode: theme.isPhysical ? "physical" : "digital",
+                selectedVariables: theme.selectedVariables || [],
+                amountVariables: theme.amountVariables || [],
+                csvHeaders: theme.csvHeaders || [],
+                sampleData: theme.sampleData || [],
+                id: theme.id,
+                languages: theme.templates.reduce((acc, t) => ({ ...acc, [t.language]: t.content }), {})
+              });
+            }}
+            onEditTemplate={(theme, tpl) => {
+              setEditingTemplateData({
+                templateName: theme.name,
+                description: theme.description,
+                lender: theme.lender,
+                advocate: theme.advocates[0] || "",
+                noticeType: theme.noticeTypes[0] || "LRN",
+                deliveryMode: theme.isPhysical ? "physical" : "digital",
+                selectedVariables: theme.selectedVariables || [],
+                amountVariables: theme.amountVariables || [],
+                csvHeaders: theme.csvHeaders || [],
+                sampleData: theme.sampleData || [],
+                id: theme.id,
+                content: tpl.content,
+                languages: theme.templates.reduce((acc, t) => ({ ...acc, [t.language]: t.content }), {})
+              });
+            }}
+            onDeleteTemplate={(theme, tpl) => {
+              const updatedThemes = themes.map(t => {
+                if (t.id === theme.id) {
+                  return {
+                    ...t,
+                    templates: t.templates.filter(item => item.language !== tpl.language)
+                  };
+                }
+                return t;
+              });
+              setThemes(updatedThemes);
+              localStorage.setItem("legalPortalThemes", JSON.stringify(updatedThemes));
+              toast.success(`Template ${tpl.language} deleted from "${theme.name}"`);
+            }}
           />
         )}
 
-        {step === "variables" && (
-          <VariableConfiguration
-            templateData={templateData}
-            onNext={handleVariableConfig}
-          />
+        {activeTab === "advocates" && (
+          <AdvocateRegistry />
         )}
 
-        {step === "preview" && (
-          <NoticePreview
-            templateData={templateData}
-            onStartNew={handleStartNew}
+        {activeTab === "digital" && (
+          <div className="p-8 text-center text-gray-500">Digital Flow Implementation Pending</div>
+        )}
+
+        {activeTab === "physical" && (
+          <div className="p-8 text-center text-gray-500">Physical Flow Implementation Pending</div>
+        )}
+        
+        {activeTab === "lenders" && (
+          <LenderRegistry onBack={() => setActiveTab("themes")} />
+        )}
+
+        {/* Dynamic Editor View - Now as a Modal */}
+        {editingTemplateData && (
+          <TemplateEditorModal 
+            templateData={editingTemplateData}
+            onClose={() => setEditingTemplateData(null)}
+            onSave={handleSaveTemplateToTheme}
           />
         )}
       </main>
+
+      {/* Modals */}
+      {isAddingTheme && (
+        <EditThemeModal 
+          theme={editingTheme} 
+          onClose={() => {
+            setIsAddingTheme(false);
+            setEditingTheme(null);
+          }}
+          onSave={(updatedTheme) => {
+            const isUpdate = editingTheme && editingTheme.id;
+            let newThemes;
+
+            if (isUpdate) {
+              // For updates, ensure we preserve templates from updatedTheme 
+              // which should already have them from the modal state
+              newThemes = themes.map(t => t.id === updatedTheme.id ? updatedTheme : t);
+              toast.success(`Theme "${updatedTheme.name}" updated`);
+            } else {
+              // Creating a NEW theme
+              // Only add a default template if the theme doesn't already have one
+              const hasTemplates = updatedTheme.templates && updatedTheme.templates.length > 0;
+              let themeWithTemplate = updatedTheme;
+
+              if (!hasTemplates) {
+                const defaultTemplate = {
+                  language: "English",
+                  createdAt: new Date().toLocaleString(),
+                  content: getFallbackTemplate(updatedTheme.noticeTypes[0] || "LRN")
+                };
+                themeWithTemplate = {
+                  ...updatedTheme,
+                  templates: [defaultTemplate]
+                };
+              }
+              
+              newThemes = [themeWithTemplate, ...themes];
+              
+              // Only open editor for brand new themes that we just added a template to
+              if (!hasTemplates && themeWithTemplate.templates[0]) {
+                setEditingTemplateData({
+                  templateName: themeWithTemplate.name,
+                  description: themeWithTemplate.description,
+                  lender: themeWithTemplate.lender,
+                  advocate: themeWithTemplate.advocates[0] || "",
+                  noticeType: themeWithTemplate.noticeTypes[0] || "LRN",
+                  deliveryMode: themeWithTemplate.isPhysical ? "physical" : "digital",
+                  selectedVariables: themeWithTemplate.selectedVariables || [],
+                  amountVariables: themeWithTemplate.amountVariables || [],
+                  csvHeaders: themeWithTemplate.csvHeaders || [],
+                  sampleData: themeWithTemplate.sampleData || [],
+                  id: themeWithTemplate.id,
+                  content: themeWithTemplate.templates[0].content,
+                  languages: { [themeWithTemplate.templates[0].language]: themeWithTemplate.templates[0].content }
+                });
+                toast.success("Theme created! Now drafting your first template...");
+              } else {
+                toast.success("Theme created!");
+              }
+            }
+            
+            setThemes(newThemes);
+            localStorage.setItem("legalPortalThemes", JSON.stringify(newThemes));
+            setIsAddingTheme(false);
+            setEditingTheme(null);
+          }}
+        />
+      )}
+      
       <div className="relative z-10">
         <AIAssistant />
       </div>

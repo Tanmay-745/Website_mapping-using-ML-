@@ -2,18 +2,22 @@
     "name": "unified-portal-runner",
     "version": "1.0.0",
     "private": true,
+    "type": "module",
     "scripts": {
-        "install:all": "npm install && npm install --prefix Barcode-1 && npm install --prefix \"Legal mapping\" && npm install --prefix \"legal pro/AI Legal Portal\" && npm install --prefix dashboard",
+        "install:all": "npm install && npm install --prefix Barcode-1 && npm install --prefix \"Legal mapping\" && npm install --prefix \"legal pro/AI Legal Portal\" && npm install --prefix dashboard && npm install --prefix CoverLetterApp",
+        "sync-env": "node sync-env.js",
         "dev:barcode": "npm run dev --prefix Barcode-1",
         "dev:mapping": "npm run dev --prefix \"Legal mapping\"",
-        "dev:ai": "npm run dev --prefix \"legal pro/AI Legal Portal\"",
-        "dev:dashboard": "npm run dev:dashboard --prefix dashboard -- --open",
+        "dev:ai": "npm run dev:frontend --prefix \"legal pro/AI Legal Portal\"",
+        "dev:ai-proxy": "node \"legal pro/AI Legal Portal/local_server.js\"",
+        "dev:translator": "cd \"legal pro/AI Legal Portal/language-translator-main\" && python main.py",
+        "dev:dashboard": "npm run dev:dashboard --prefix dashboard",
         "dev:backend": "python backend/main.py",
         "dev:coverletter": "npm run dev --prefix CoverLetterApp",
         "dev:portal": "npx vite . --port 8080",
-        "dev:all": "concurrently --hide \"barcode,mapping,ai,backend,coverletter\" --kill-others -n \"portal,barcode,mapping,ai,dashboard,backend,coverletter\" \"npm run dev:portal\" \"npm run dev:barcode\" \"npm run dev:mapping\" \"npm run dev:ai\" \"npm run dev:dashboard\" \"npm run dev:backend\" \"npm run dev:coverletter\"",
-        "dev": "npm run dev:all",
-        "build": "mkdir -p dist/dashboard dist/mapping dist/barcode dist/coverletter && npm run build --prefix dashboard && cp -r dashboard/dist/* dist/dashboard/ && npm run build --prefix \"Legal mapping\" && cp -r \"Legal mapping\"/dist/* dist/mapping/ && cd Barcode-1 && npm install && npm run build && cd .. && cp -r Barcode-1/.next/static dist/barcode/static && cp -r Barcode-1/public/* dist/barcode/ && cp index.html dist/"
+        "dev": "concurrently \"npm run dev:portal\" \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:ai\" \"npm run dev:ai-proxy\" \"npm run dev:translator\" \"npm run dev:mapping\" \"npm run dev:barcode\" \"npm run dev:coverletter\"",
+        "build": "mkdir -p dist/dashboard dist/mapping dist/ai && npm run build --prefix dashboard && cp -r dashboard/dist/* dist/dashboard/ && npm run build --prefix \"Legal mapping\" && cp -r \"Legal mapping\"/dist/* dist/mapping/ && npm run build --prefix \"legal pro/AI Legal Portal\" && cp -r \"legal pro/AI Legal Portal\"/dist/* dist/ai/ && cp index.html dist/",
+        "build:prod": "node sync-env.js && npm run build"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.1.18",

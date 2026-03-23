@@ -23,21 +23,52 @@ import { getAdvocates, saveAdvocate, deleteAdvocate, Advocate } from "../api";
 interface AdvocatesModalProps {
     isOpen: boolean;
     onClose: () => void;
+    initialEditingId?: string | null;
+    initialView?: 'list' | 'form';
 }
 
-export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
-    const [view, setView] = useState<'list' | 'create'>('list');
+export function AdvocatesModal({ 
+  isOpen, 
+  onClose, 
+  initialEditingId = null,
+  initialView = 'list'
+}: AdvocatesModalProps) {
+  const [view, setView] = useState<'list' | 'form'>(initialView);
     const [searchQuery, setSearchQuery] = useState("");
     const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
     const [advocates, setAdvocates] = useState<Advocate[]>([]);
     const [loading, setLoading] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(initialEditingId);
 
     useEffect(() => {
         if (isOpen) {
             loadAdvocates();
+            setView(initialView);
+            setEditingId(initialEditingId);
         }
-    }, [isOpen]);
+    }, [isOpen, initialView, initialEditingId]);
+
+    useEffect(() => {
+        if (isOpen && editingId && advocates.length > 0) {
+            const advocate = advocates.find(a => a.id === editingId);
+            if (advocate) {
+                // Populate form without changing view (view is handled by the other effect)
+                setFormData({
+                    name: advocate.name,
+                    phone: advocate.phone,
+                    companyName: advocate.companyName || "",
+                    city: advocate.city || "",
+                    pincode: advocate.pincode || "",
+                    state: advocate.state || "",
+                    address: advocate.address || "",
+                    bio: advocate.bio || "",
+                    headerHtml: advocate.headerHtml || "",
+                    signature: null,
+                });
+                setSignaturePreview(advocate.signature || null);
+            }
+        }
+    }, [isOpen, editingId, advocates]);
 
     const loadAdvocates = async () => {
         try {
@@ -55,17 +86,18 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
         phone: "",
         companyName: "",
         city: "",
-        pinCode: "",
+        pincode: "",
         state: "",
         address: "",
-        bio: "", // Rich text content
+        bio: "", // Rich text content/Bio
+        headerHtml: "", // Custom HTML for PDF header
         signature: null as File | null,
     });
 
     const handleSave = async () => {
         setLoading(true);
         try {
-            let signatureBase64 = editingId ? (advocates.find(a => a.id === editingId)?.signature || "") : "";
+            let signatureBase64 = editingId ? (advocates.find(a => String(a.id) === String(editingId))?.signature || "") : "";
 
             // If a new file is selected, override the existing signature
             if (formData.signature) {
@@ -85,12 +117,13 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
                 phone: formData.phone,
                 companyName: formData.companyName,
                 city: formData.city,
-                pinCode: formData.pinCode,
+                pincode: formData.pincode,
                 state: formData.state,
                 address: formData.address,
                 bio: formData.bio,
+                headerHtml: formData.headerHtml,
                 signature: signatureBase64
-            };
+            } as Advocate;
 
             await saveAdvocate(newAdvocate);
             await loadAdvocates();
@@ -110,10 +143,11 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
             phone: "",
             companyName: "",
             city: "",
-            pinCode: "",
+            pincode: "",
             state: "",
             address: "",
             bio: "",
+            headerHtml: "",
             signature: null,
         });
         setSignaturePreview(null);
@@ -129,34 +163,28 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
         setFormData({
             name: advocate.name,
             phone: advocate.phone,
-            companyName: advocate.companyName,
-            city: advocate.city,
-            pinCode: advocate.pinCode,
-            state: advocate.state,
-            address: advocate.address,
-            bio: advocate.bio,
+            companyName: advocate.companyName || "",
+            city: advocate.city || "",
+            pincode: advocate.pincode || "",
+            state: advocate.state || "",
+            address: advocate.address || "",
+            bio: advocate.bio || "",
+            headerHtml: advocate.headerHtml || "",
             signature: null, // File input can't be pre-filled
         });
         setSignaturePreview(advocate.signature || null);
         setEditingId(advocate.id || null);
-        setView('create');
+        setView('form');
     };
 
     const handleDelete = async (id: string) => {
-        console.log("Attempting to delete advocate with ID:", id);
         if (window.confirm("Are you sure you want to delete this advocate?")) {
-            // Optimistic update
-            setAdvocates(prev => prev.filter(adv => adv.id !== id));
-
             try {
                 await deleteAdvocate(id);
-                // Silent reload to ensure consistency
                 loadAdvocates();
                 toast.success("Advocate deleted successfully");
             } catch (error) {
                 console.error("Failed to delete advocate", error);
-                alert("Failed to delete: " + (error as Error).message); // Use alert for visibility
-                await loadAdvocates(); // Revert on error
                 toast.error("Failed to delete advocate");
             }
         }
@@ -164,7 +192,7 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
 
     const filteredAdvocates = advocates.filter(adv =>
         adv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        adv.companyName.toLowerCase().includes(searchQuery.toLowerCase())
+        (adv.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) || false)
     );
 
     return (
@@ -197,7 +225,7 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
                                         className="bg-green-700 hover:bg-green-800 text-white gap-2 whitespace-nowrap"
                                         onClick={() => {
                                             resetForm();
-                                            setView('create');
+                                            setView('form');
                                         }}
                                     >
                                         <Plus className="w-4 h-4" />
@@ -327,8 +355,8 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
                                 <Input
                                     id="pincode"
                                     placeholder="Enter pincode"
-                                    value={formData.pinCode}
-                                    onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
+                                    value={formData.pincode}
+                                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -364,8 +392,8 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
 
                         <div className="space-y-2">
                             <Label>Bio / Note</Label>
-                            <p className="text-xs text-gray-500">Note: Images height should be less than 150px</p>
-                            <div className="h-[300px] overflow-hidden rounded-md border border-input">
+                            <p className="text-xs text-gray-500">Note: Images height should be less than 150px (This appears in some templates)</p>
+                            <div className="h-[200px] overflow-hidden rounded-md border border-input">
                                 <TemplateEditor
                                     content={formData.bio}
                                     onChange={(content) => setFormData(prev => ({ ...prev, bio: content }))}
@@ -373,6 +401,18 @@ export function AdvocatesModal({ isOpen, onClose }: AdvocatesModalProps) {
                                     onInsertVariable={() => { }}
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="headerHtml">Notice Header (HTML)</Label>
+                            <p className="text-xs text-gray-500">Custom HTML for the top of the PDF notice</p>
+                            <Textarea
+                                id="headerHtml"
+                                placeholder="&lt;div style='text-align: center'&gt;...&lt;/div&gt;"
+                                className="min-h-[100px] font-mono text-xs"
+                                value={formData.headerHtml}
+                                onChange={(e) => setFormData({ ...formData, headerHtml: e.target.value })}
+                            />
                         </div>
 
                         <div className="space-y-2">

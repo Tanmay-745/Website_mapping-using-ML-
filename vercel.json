@@ -2,8 +2,9 @@
   "version": 2,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/dashboard/(.*)", "destination": "/dashboard/$1" },
-    { "source": "/mapping/(.*)", "destination": "/mapping/$1" },
+    { "source": "/dashboard/(.*)", "destination": "/dashboard/index.html" },
+    { "source": "/mapping/(.*)", "destination": "/mapping/index.html" },
+    { "source": "/ai/(.*)", "destination": "/ai/index.html" },
     { "source": "/barcode/(.*)", "destination": "/barcode/$1" },
     { "source": "/coverletter/(.*)", "destination": "/CoverLetterApp/api/index.js" },
     { "source": "/coverletter", "destination": "/CoverLetterApp/api/index.js" },

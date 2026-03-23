@@ -296,6 +296,21 @@
                 </div>
             </a>
 
+            <a href="/ai/" class="card">
+                <div class="icon-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                </div>
+                <h2>AI Legal Notices</h2>
+                <p>Automated generation of legal notices and AI-driven document drafting.</p>
+                <div class="card-footer">
+                    <span class="status-dot"></span> AI Ready
+                </div>
+            </a>
+
             <a href="/mapping/" class="card">
                 <div class="icon-box">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
@@ -352,7 +367,8 @@
         // Local Dev Port Mapping
         const DEV_PORTS = {
             '/dashboard/': 'http://localhost:3002',
-            '/mapping/': 'http://localhost:5173', // Vite usually increments ports
+            '/ai/': 'http://localhost:3001',
+            '/mapping/': 'http://localhost:5173',
             '/barcode/': 'http://localhost:3000',
             '/coverletter/': 'http://localhost:5001'
         };

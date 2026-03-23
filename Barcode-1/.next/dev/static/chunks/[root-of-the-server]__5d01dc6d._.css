@@ -2779,6 +2779,12 @@
   }
 
   @media (hover: hover) {
+    .group-hover\:text-primary:is(:where(.group):hover *) {
+      color: var(--primary);
+    }
+  }
+
+  @media (hover: hover) {
     .group-hover\:opacity-100:is(:where(.group):hover *) {
       opacity: 1;
     }

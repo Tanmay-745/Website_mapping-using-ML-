@@ -7,3 +7,5 @@ python-multipart
 transformers
 torch --index-url https://download.pytorch.org/whl/cpu
 sacremoses
+googletrans==4.0.0-rc1
+httpx

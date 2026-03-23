@@ -54,8 +54,11 @@ export function VariableConfiguration({
 
   // Auto-detect on mount if no amount variables are selected yet
   useEffect(() => {
-    // 1. Check for detected placeholders from previous step
-    const detected = localStorage.getItem('detectedPlaceholders');
+    // 1. Check for detected placeholders (prefer props > localStorage)
+    const detected = templateData.selectedVariables?.length > 0 
+      ? JSON.stringify(templateData.selectedVariables)
+      : localStorage.getItem('detectedPlaceholders');
+      
     if (detected) {
       try {
         const placeholders = JSON.parse(detected);
@@ -193,6 +196,7 @@ export function VariableConfiguration({
       selectedVariables,
       amountVariables,
       deliveryMode,
+      sampleData: previewData,
     });
   };
 

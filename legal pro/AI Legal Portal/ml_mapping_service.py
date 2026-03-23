@@ -9,6 +9,40 @@ import torch
 import re
 import os
 import mammoth
+from googletrans import Translator
+from googletrans import LANGUAGES
+
+class TranslatorCore:
+    def __init__(self):
+        self.translator = Translator()
+
+    def translate_text(self, text, dest):
+        if not text:
+            return ""
+        
+        # Identify and protect placeholders { } or ${ }
+        placeholders = re.findall(r'(\$\{.*?\}|\{.*?\})', text)
+        tokenized_text = text
+        for i, placeholder in enumerate(placeholders):
+            tokenized_text = tokenized_text.replace(placeholder, f" _P{i}_ ", 1)
+
+        try:
+            translated_obj = self.translator.translate(tokenized_text, dest=dest)
+            translated_text = translated_obj.text
+            
+            # Restore placeholders
+            for i, placeholder in enumerate(placeholders):
+                # Handle potential case changes by googletrans
+                translated_text = translated_text.replace(f"_P{i}_", placeholder).replace(f"_p{i}_", placeholder)
+                # Also handle cases where spaces might have been added around tokens
+                translated_text = translated_text.replace(f" _P{i}_ ", placeholder).replace(f" _p{i}_ ", placeholder)
+            
+            return translated_text
+        except Exception as e:
+            print(f"Translation logic error: {e}")
+            return text # Fallback to original text
+
+translator_core = TranslatorCore()
 
 app = FastAPI(title="Legal Portal AI/ML Service")
 
@@ -161,14 +195,24 @@ async def generate_notice(request: GenerateRequest):
 @app.post("/translate", response_model=TranslateResponse)
 async def translate_text(request: TranslateRequest):
     try:
-        if request.target_lang.lower() == "hi":
-            # Manual inference to avoid pipeline KeyError
-            inputs = translator_tokenizer(request.text, return_tensors="pt", padding=True)
-            output_tokens = translator_model.generate(**inputs)
-            translated = translator_tokenizer.decode(output_tokens[0], skip_special_tokens=True)
-            return TranslateResponse(translated_text=translated)
+        # Map target language if necessary (e.g. "hi" stays "hi", "hindi" -> "hi")
+        target_lang = request.target_lang.lower()
+        if target_lang in LANGUAGES:
+            dest = target_lang
         else:
-            raise HTTPException(status_code=400, detail=f"Target language '{request.target_lang}' not supported yet.")
+            # Try to find by name
+            dest = None
+            for code, name in LANGUAGES.items():
+                if name.lower() == target_lang:
+                    dest = code
+                    break
+            
+            if not dest:
+                # Default to English if not found, though ideally we should error or fallback
+                dest = "en"
+
+        translated = translator_core.translate_text(request.text, dest)
+        return TranslateResponse(translated_text=translated)
     except Exception as e:
         print(f"Translation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

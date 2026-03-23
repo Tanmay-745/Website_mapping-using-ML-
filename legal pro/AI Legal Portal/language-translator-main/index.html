@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Translator | Universal Communication</title>
+    <meta name="description" content="A premium, real-time language translator with voice and text-to-speech support.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-mesh"></div>
+    <main class="app-container">
+        <header class="app-header">
+            <h1 class="logo"><i class="fas fa-language"></i> Language <span>Translator</span></h1>
+            <p class="tagline">Break barriers, connect worlds.</p>
+        </header>
+
+        <section class="translator-card">
+            <div class="translator-controls">
+                <div class="control-group">
+                    <label for="from-lang">From</label>
+                    <select id="from-lang">
+                        <option value="auto">Auto Detect</option>
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="swap-btn" id="swap-languages">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="control-group">
+                    <label for="to-lang">To</label>
+                    <select id="to-lang">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <div class="text-areas">
+                <div class="area-container left">
+                    <textarea id="from-text" placeholder="Enter text to translate..."></textarea>
+                    <div class="area-actions">
+                        <button id="voice-input" title="Voice Input"><i class="fas fa-microphone"></i></button>
+                        <span class="char-count">0 / 5000</span>
+                    </div>
+                </div>
+                <div class="area-container right">
+                    <textarea id="to-text" placeholder="Translation will appear here..." readonly></textarea>
+                    <div class="area-actions">
+                        <button id="read-aloud" title="Read Aloud"><i class="fas fa-volume-up"></i></button>
+                        <button id="copy-btn" title="Copy to Clipboard"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-actions">
+                <button id="translate-btn" class="primary-btn">
+                    <i class="fas fa-magic"></i> Translate Now
+                </button>
+                <button id="clear-btn" class="secondary-btn">
+                    <i class="fas fa-eraser"></i> Clear
+                </button>
+            </div>
+        </section>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 Language Translator. Powered by Advanced ML.</p>
+            <div class="features-badge">
+                <span><i class="fas fa-shield-alt"></i> Placeholder Protection Active</span>
+            </div>
+        </footer>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

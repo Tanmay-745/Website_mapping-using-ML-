@@ -5,8 +5,8 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { NoticeType, TemplateData } from "../App";
-import { Sparkles, Store, Check, ChevronsUpDown } from "lucide-react";
-import { generateNoticeContent, getAdvocates, Advocate, searchTemplates, analyzeTemplate, getNoticeTypes } from "../api";
+import { Store, Check, ChevronsUpDown } from "lucide-react";
+import { generateNoticeContent, getAdvocates, Advocate, searchTemplates, analyzeTemplate, getNoticeTypes, getLenders, Lender } from "../api";
 import { toast } from "sonner";
 import { cn } from "./ui/utils";
 import {
@@ -37,6 +37,8 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
   });
   const [open, setOpen] = useState(false);
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
+  const [lenders, setLenders] = useState<Lender[]>([]);
+  const [detectedPlaceholders, setDetectedPlaceholders] = useState<string[]>([]);
   const [noticeTypeNames, setNoticeTypeNames] = useState<Record<string, string>>({
     LRN: "Legal Recovery Notice",
     LDN: "Legal Demand Notice",
@@ -47,11 +49,13 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [advData, typeData] = await Promise.all([
+        const [advData, typeData, lenderData] = await Promise.all([
           getAdvocates(),
-          getNoticeTypes()
+          getNoticeTypes(),
+          getLenders()
         ]);
         setAdvocates(advData);
+        setLenders(lenderData);
         
         const typeMapping: Record<string, string> = {};
         typeData.forEach((t: any) => {
@@ -76,6 +80,7 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
 
           try {
             const analysis = await analyzeTemplate(matchedFile);
+            setDetectedPlaceholders(analysis.placeholders);
             toast.success(`Variables detected from template: ${analysis.placeholders.join(", ")}`);
 
             // We'll pass the mathed file back so the next step knows to use its content
@@ -98,9 +103,12 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedAdvocate = advocates.find(a => a.name === formData.advocate);
+    const selectedLender = lenders.find(l => l.name === formData.lender);
     onNext({
       ...formData,
-      advocateDetails: selectedAdvocate
+      advocateDetails: selectedAdvocate,
+      lenderDetails: selectedLender,
+      selectedVariables: [...new Set([...detectedPlaceholders])] // Pre-fill with detected ones
     });
   };
 
@@ -150,31 +158,6 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
                 rows={4}
                 required
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-2 bottom-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                onClick={async () => {
-                  if (!formData.templateName) {
-                    toast.error("Please enter a template name first");
-                    return;
-                  }
-                  try {
-                    const desc = await generateNoticeContent(
-                      `Write a short description for a legal notice template named "${formData.templateName}" of type "${noticeTypeNames[noticeType!]}"`,
-                      { type: "description", ...formData }
-                    );
-                    setFormData(prev => ({ ...prev, description: desc }));
-                    toast.success("Description generated!");
-                  } catch (e) {
-                    toast.error("Failed to generate description");
-                  }
-                }}
-              >
-                <Sparkles className="w-3 h-3 mr-1" />
-                Auto-Generate
-              </Button>
             </div>
           </div>
 
@@ -183,6 +166,7 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
               <Label htmlFor="lender">Lender Name *</Label>
               <Input
                 id="lender"
+                list="lender-list"
                 placeholder="e.g., ABC Financial Services"
                 value={formData.lender}
                 onChange={(e) =>
@@ -190,6 +174,11 @@ export function TemplateDetailsForm({ noticeType, onNext }: TemplateDetailsFormP
                 }
                 required
               />
+              <datalist id="lender-list">
+                {lenders.map((l) => (
+                  <option key={l.id} value={l.name} />
+                ))}
+              </datalist>
             </div>
 
             <div className="space-y-2">

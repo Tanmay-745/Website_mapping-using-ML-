@@ -248,6 +248,36 @@ export default function BarcodePage() {
     }
   }
 
+  const downloadLenderCSV = (lenderName: string) => {
+    const lenderBarcodes = barcodes.filter(b => 
+      b.isUsed && (b.bankName === lenderName || (!b.bankName && lenderName === "Unknown Lender"))
+    );
+
+    const headers = ["Barcode", "LAN", "Lender Name", "Customer Phone Number", "Used Date"];
+    const rows = lenderBarcodes.map(b => [
+      b.code,
+      b.lan || "",
+      b.bankName || "Unknown Lender",
+      b.lenderName || "",
+      b.usedAt || b.createdAt || ""
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `barcodes_${lenderName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <Header />
@@ -396,8 +426,18 @@ export default function BarcodePage() {
                   </thead>
                   <tbody>
                     {usedLendersStats.map((lender) => (
-                      <tr key={lender.name} className="border-t border-border dark:border-gray-700 hover:bg-muted/30 dark:hover:bg-gray-800/30">
-                        <td className="px-4 py-3 font-medium dark:text-gray-300">{lender.name}</td>
+                      <tr 
+                        key={lender.name} 
+                        className="border-t border-border dark:border-gray-700 hover:bg-muted/30 dark:hover:bg-gray-800/30 cursor-pointer group"
+                        onClick={() => downloadLenderCSV(lender.name)}
+                        title={`Download CSV for ${lender.name}`}
+                      >
+                        <td className="px-4 py-3 font-medium dark:text-gray-300 group-hover:text-primary transition-colors">
+                          <div className="flex items-center gap-2">
+                            {lender.name}
+                            <Upload className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <span className="inline-flex items-center justify-center bg-primary/10 text-primary dark:bg-blue-900/30 dark:text-blue-400 px-2.5 py-0.5 rounded-full font-medium">
                             {lender.count.toLocaleString()}

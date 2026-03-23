@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: legal-portal-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContextDir: backend
+    plan: starter # ML models need more than the free tier (512MB)
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false # Set this in the Render dashboard
+      - key: PORT
+        value: 8000
+    disk:
+      name: legal-data
+      mountPath: /app/data
+      sizeGB: 1
