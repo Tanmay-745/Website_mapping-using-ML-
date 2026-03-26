@@ -1,9 +1,12 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
+export type CsvValue = string | number | boolean | null | undefined;
+export type CsvRow = Record<string, CsvValue>;
+
 export interface ParsedCSV {
   headers: string[];
-  data: Record<string, string>[];
+  data: CsvRow[];
   fileName: string;
 }
 
@@ -30,7 +33,7 @@ export function parseCSVFile(file: File): Promise<ParsedCSV> {
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {
             defval: '',
             raw: false
-          }) as Record<string, string>[];
+          }) as CsvRow[];
 
           if (jsonData.length === 0) {
             resolve({ headers: [], data: [], fileName: file.name });
@@ -62,7 +65,7 @@ export function parseCSVFile(file: File): Promise<ParsedCSV> {
       skipEmptyLines: true,
       complete: (results) => {
         const headers = results.meta.fields || [];
-        const data = results.data as Record<string, string>[];
+        const data = results.data as CsvRow[];
 
         resolve({
           headers,

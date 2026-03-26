@@ -4,9 +4,11 @@ import { MappingInterface } from './components/MappingInterface';
 import { Download, RotateCcw, FileText } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { useCSVMapping } from './hooks/useCSVMapping';
+import { CsvRow } from './utils/csvParser';
 import { Header } from './components/Header';
 import { PhysicalToggle } from './components/PhysicalToggle';
 import { DataPreview } from './components/DataPreview';
+import { HeaderMapping } from './utils/headerMatcher';
 
 import { ConsolidationToggle } from './components/ConsolidationToggle';
 import * as XLSX from 'xlsx';
@@ -17,6 +19,7 @@ export default function App() {
     mappings,
     isProcessing,
     isPhysical,
+    allowDuplicateBarcodes,
     isConsolidated,
     allTargetHeaders,
     customTargetHeaders,
@@ -72,14 +75,14 @@ export default function App() {
     const mappedData = exportResult.data;
     let headers = exportResult.headers;
 
-    if (mappings.filter((m) => m.targetHeader !== null).length === 0) {
+    if (mappings.filter((m: HeaderMapping) => m.targetHeader !== null).length === 0) {
       toast.error("Please map at least one column.");
       return;
     }
 
     // Filter out columns that are completely empty
     headers = headers.filter(header => {
-      return mappedData.some((row: any) => {
+      return mappedData.some((row: CsvRow) => {
         const val = row[header];
         return val !== undefined && val !== null && String(val).trim() !== '';
       });
@@ -102,8 +105,8 @@ export default function App() {
     // 2. Send to Local AI Server
     const toastId = toast.loading("Syncing data to AI Portal...");
     try {
-      // Try port 54321 (Local AI Server)
-      const response = await fetch('http://localhost:54321/api/share-data', {
+      // Try Local AI Server
+      const response = await fetch(`${import.meta.env.VITE_AI_PORTAL_URL}/api/share-data`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -136,7 +139,7 @@ export default function App() {
     // Filter out columns that are completely empty
     headers = headers.filter(header => {
       // Check if ANY row has a non-empty value for this header
-      return mappedData.some((row: any) => {
+      return mappedData.some((row: CsvRow) => {
         const val = row[header];
         return val !== undefined && val !== null && String(val).trim() !== '';
       });
@@ -210,6 +213,7 @@ export default function App() {
 
             <PhysicalToggle
               isPhysical={isPhysical}
+              allowDuplicateBarcodes={allowDuplicateBarcodes}
               onToggle={handlePhysicalToggle}
             />
 
@@ -257,7 +261,7 @@ export default function App() {
               </button>
               <button
                 onClick={handleExport}
-                disabled={mappings.filter((m) => m.targetHeader !== null).length === 0}
+                disabled={mappings.filter((m: HeaderMapping) => m.targetHeader !== null).length === 0}
                 className="group relative px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl overflow-hidden transition-all duration-300 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed hover:scale-105 hover:shadow-xl flex items-center gap-2 font-medium"
               >
                 <span className="relative z-10 flex items-center gap-2">

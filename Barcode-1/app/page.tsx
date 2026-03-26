@@ -3,9 +3,11 @@
 import * as React from "react"
 import { BarcodeTable, type BarcodeItem } from "@/components/barcode-table"
 import { BarcodeStats } from "@/components/barcode-stats"
-import { Upload } from "lucide-react"
+import { Upload, Trash2, RotateCcw, Edit2 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -24,6 +26,12 @@ export default function BarcodePage() {
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false)
   const [isUsedLendersDialogOpen, setIsUsedLendersDialogOpen] = React.useState(false)
+  const [isEditLenderDialogOpen, setIsEditLenderDialogOpen] = React.useState(false)
+  const [isResetLenderDialogOpen, setIsResetLenderDialogOpen] = React.useState(false)
+  const [lenderToReset, setLenderToReset] = React.useState("")
+  const [resetConfirmationNumber, setResetConfirmationNumber] = React.useState("")
+  const [editingOldLenderName, setEditingOldLenderName] = React.useState("")
+  const [editingNewLenderName, setEditingNewLenderName] = React.useState("")
   const [uploadPreview, setUploadPreview] = React.useState<BarcodeItem[]>([])
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
@@ -31,14 +39,27 @@ export default function BarcodePage() {
   React.useEffect(() => {
     fetchBarcodes()
 
+    // 1. Listen for window messages (if used as iframe)
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'APP_RELOAD' && event.data?.appId === 'barcode') {
+      if ((event.data?.type === 'APP_RELOAD' || event.data?.type === 'RELOAD_APP') && event.data?.appId === 'barcode') {
         fetchBarcodes()
       }
     }
 
+    // 2. Listen for BroadcastChannel (for cross-tab sync)
+    const bc = new BroadcastChannel('barcode_sync');
+    bc.onmessage = (event) => {
+      if (event.data === 'refresh') {
+        console.log("BroadcastChannel: Refreshing barcodes...");
+        fetchBarcodes();
+      }
+    };
+
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      bc.close();
+    };
   }, [])
 
   const fetchBarcodes = async () => {
@@ -248,6 +269,66 @@ export default function BarcodePage() {
     }
   }
 
+  const handleResetByLenderClick = (lenderName: string) => {
+    setLenderToReset(lenderName)
+    setResetConfirmationNumber("")
+    setIsResetLenderDialogOpen(true)
+  }
+
+  const handleResetByLenderConfirm = async () => {
+    try {
+      await fetch('/api/barcodes', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'resetByLender',
+          targetLender: lenderToReset
+        })
+      })
+      fetchBarcodes()
+      toast.success(`Successfully reset all barcodes for ${lenderToReset}`)
+      setIsResetLenderDialogOpen(false)
+      setResetConfirmationNumber("")
+      
+      // Broadcast sync
+      const bc = new BroadcastChannel('barcode_sync');
+      bc.postMessage('refresh');
+      bc.close();
+    } catch (e) {
+      console.error("Reset by lender failed", e)
+      toast.error("Failed to reset barcodes")
+    }
+  }
+
+  const handleEditLenderClick = (oldName: string) => {
+    setEditingOldLenderName(oldName)
+    setEditingNewLenderName(oldName === 'Unknown Lender' ? '' : oldName)
+    setIsEditLenderDialogOpen(true)
+  }
+
+  const handleEditLenderSubmit = async () => {
+    if (!editingNewLenderName.trim() || editingNewLenderName === editingOldLenderName) return;
+    try {
+      await fetch('/api/barcodes', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'editLenderName',
+          oldLenderName: editingOldLenderName,
+          newLenderName: editingNewLenderName.trim()
+        })
+      })
+      fetchBarcodes()
+      toast.success(`Successfully updated lender name to ${editingNewLenderName.trim()}`)
+      setIsEditLenderDialogOpen(false)
+      
+      const bc = new BroadcastChannel('barcode_sync');
+      bc.postMessage('refresh');
+      bc.close();
+    } catch (e) {
+      console.error("Edit lender name failed", e)
+      toast.error("Failed to update lender name")
+    }
+  }
+
   const downloadLenderCSV = (lenderName: string) => {
     const lenderBarcodes = barcodes.filter(b => 
       b.isUsed && (b.bankName === lenderName || (!b.bankName && lenderName === "Unknown Lender"))
@@ -428,20 +509,42 @@ export default function BarcodePage() {
                     {usedLendersStats.map((lender) => (
                       <tr 
                         key={lender.name} 
-                        className="border-t border-border dark:border-gray-700 hover:bg-muted/30 dark:hover:bg-gray-800/30 cursor-pointer group"
-                        onClick={() => downloadLenderCSV(lender.name)}
-                        title={`Download CSV for ${lender.name}`}
+                        className="border-t border-border dark:border-gray-700 hover:bg-muted/30 dark:hover:bg-gray-800/30 group"
                       >
-                        <td className="px-4 py-3 font-medium dark:text-gray-300 group-hover:text-primary transition-colors">
+                        <td 
+                          className="px-4 py-3 font-medium dark:text-gray-300 cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => downloadLenderCSV(lender.name)}
+                          title={`Download CSV for ${lender.name}`}
+                        >
                           <div className="flex items-center gap-2">
                             {lender.name}
                             <Upload className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="inline-flex items-center justify-center bg-primary/10 text-primary dark:bg-blue-900/30 dark:text-blue-400 px-2.5 py-0.5 rounded-full font-medium">
-                            {lender.count.toLocaleString()}
-                          </span>
+                          <div className="flex items-center justify-end gap-3">
+                            <span className="inline-flex items-center justify-center bg-primary/10 text-primary dark:bg-blue-900/30 dark:text-blue-400 px-2.5 py-0.5 rounded-full font-medium">
+                              {lender.count.toLocaleString()}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-600/10"
+                              onClick={(e) => { e.stopPropagation(); handleEditLenderClick(lender.name); }}
+                              title={`Edit name for ${lender.name}`}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleResetByLenderClick(lender.name)}
+                              title={`Reset all barcodes for ${lender.name}`}
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -452,6 +555,86 @@ export default function BarcodePage() {
           </div>
           <DialogFooter>
             <Button onClick={() => setIsUsedLendersDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditLenderDialogOpen} onOpenChange={setIsEditLenderDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Lender Name</DialogTitle>
+            <DialogDescription>
+              Rename "{editingOldLenderName}" across all used barcodes. This action affects all {usedLendersStats.find(l => l.name === editingOldLenderName)?.count} barcodes instantly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-lender-name">New Lender Name</Label>
+              <Input
+                id="new-lender-name"
+                autoFocus
+                value={editingNewLenderName}
+                onChange={(e) => setEditingNewLenderName(e.target.value)}
+                placeholder="Enter correct lender name"
+                className="bg-secondary border-border"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsEditLenderDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleEditLenderSubmit} 
+              disabled={!editingNewLenderName.trim() || editingNewLenderName === editingOldLenderName}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Update All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isResetLenderDialogOpen} onOpenChange={(open) => {
+        setIsResetLenderDialogOpen(open);
+        if (!open) setResetConfirmationNumber("");
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Reset All Barcodes</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reset ALL barcodes assigned to <strong>"{lenderToReset}"</strong>? 
+              <br /><br />
+              This will move {usedLendersStats.find(l => l.name === lenderToReset)?.count || 0} barcodes back to the "Available" pool. <strong>This action cannot be undone.</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-confirm" className="text-destructive font-medium">
+                Type <strong>{usedLendersStats.find(l => l.name === lenderToReset)?.count || 0}</strong> to confirm
+              </Label>
+              <Input
+                id="reset-confirm"
+                type="text"
+                value={resetConfirmationNumber}
+                onChange={(e) => setResetConfirmationNumber(e.target.value)}
+                placeholder={`Type ${usedLendersStats.find(l => l.name === lenderToReset)?.count || 0}`}
+                className="bg-secondary border-destructive/30 focus-visible:ring-destructive focus-visible:border-destructive"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => {
+              setIsResetLenderDialogOpen(false)
+              setResetConfirmationNumber("")
+            }}>Cancel</Button>
+            <Button 
+              onClick={handleResetByLenderConfirm} 
+              disabled={resetConfirmationNumber !== String(usedLendersStats.find(l => l.name === lenderToReset)?.count || 0)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Yes, Reset All
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

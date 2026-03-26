@@ -3,7 +3,7 @@ import { X, Save, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import { TemplateEditor } from './TemplateEditor';
 import { VariableSidePanel } from './VariableSidePanel';
-import { generateNoticeContent, translateText } from '../api';
+import { generateNoticeContent, translateText, translateWithAccuracy } from '../api';
 import { toast } from 'sonner';
 import { TemplateData, Theme } from '../App';
 import { getFallbackTemplate } from '../utils/templates_fallback';
@@ -35,6 +35,8 @@ export function TemplateEditorModal({ templateData, onClose, onSave }: TemplateE
   const [isGenerating, setIsGenerating] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>(templateData.languages || {});
   const [showVariables, setShowVariables] = useState(false);
+  const [accuracyScore, setAccuracyScore] = useState<number | null>(null);
+  const [accuracyReason, setAccuracyReason] = useState<string | null>(null);
   const editorRef = React.useRef<any>(null);
 
   // Analyze variable usage
@@ -59,9 +61,11 @@ export function TemplateEditorModal({ templateData, onClose, onSave }: TemplateE
           setIsGenerating(true);
           try {
             const targetCode = languageMap[currentLanguage] || "en";
-            const translated = await translateText(sourceContent, targetCode);
-            setContent(translated);
-            setDrafts(prev => ({ ...prev, [currentLanguage]: translated }));
+            const { translatedText, accuracy, reason } = await translateWithAccuracy(sourceContent, targetCode);
+            setContent(translatedText);
+            setDrafts(prev => ({ ...prev, [currentLanguage]: translatedText }));
+            setAccuracyScore(accuracy);
+            setAccuracyReason(reason || null);
             toast.success(`Translated to ${currentLanguage} successfully!`, { id: toastId });
           } catch (err) {
             console.error("Auto-translation failed:", err);
@@ -72,6 +76,8 @@ export function TemplateEditorModal({ templateData, onClose, onSave }: TemplateE
           }
         } else {
           setContent("");
+          setAccuracyScore(null);
+          setAccuracyReason(null);
         }
       }
     };
@@ -166,13 +172,31 @@ export function TemplateEditorModal({ templateData, onClose, onSave }: TemplateE
                 <option value="Telugu">Telugu</option>
                 <option value="Kannada">Kannada</option>
                 <option value="Bengali">Bengali</option>
+                <option value="Punjabi">Punjabi</option>
+                <option value="Malayalam">Malayalam</option>
+                <option value="Odia">Odia</option>
+                <option value="Assamese">Assamese</option>
               </select>
             </div>
             
-            <div className="text-[10px] font-black uppercase tracking-widest text-blue-400 dark:text-blue-600 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-full shadow-sm">
-              AI Powered Draft
+            <div className="flex items-center gap-3">
+              {accuracyScore !== null && currentLanguage !== "English" && (
+                <div className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm ${accuracyScore > 90 ? 'text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30' : accuracyScore > 75 ? 'text-amber-700 bg-amber-100 dark:bg-amber-900/30' : 'text-red-700 bg-red-100 dark:bg-red-900/30'}`}>
+                  Accuracy: {accuracyScore}%
+                </div>
+              )}
+              <div className="text-[10px] font-black uppercase tracking-widest text-blue-400 dark:text-blue-600 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-full shadow-sm">
+                AI Powered Draft
+              </div>
             </div>
           </div>
+
+          {accuracyReason && (
+            <div className="animate-in fade-in zoom-in-95 duration-300 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 rounded-xl border border-amber-200 dark:border-amber-800/50 text-sm shadow-sm flex items-start gap-3">
+              <span className="font-extrabold uppercase text-[10px] tracking-widest mt-0.5 shrink-0 bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 px-2 py-1 rounded-md">Analysis</span>
+              <p className="leading-snug flex-1 italic">{accuracyReason}</p>
+            </div>
+          )}
 
           {/* Editor Container with Sidebar */}
           <div className="flex gap-6 items-start">

@@ -1,7 +1,17 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { parseCSVFile, ParsedCSV } from '../utils/csvParser';
+import { parseCSVFile, ParsedCSV, CsvRow } from '../utils/csvParser';
 import { mapHeaders, HeaderMapping, TARGET_HEADERS } from '../utils/headerMatcher';
+
+
+// Singleton worker outside the hook to prevent memory leaks during re-renders
+let ML_WORKER: Worker | null = null;
+const getMLWorker = () => {
+    if (typeof window !== 'undefined' && !ML_WORKER) {
+        ML_WORKER = new Worker(new URL('../utils/mlWorker', import.meta.url), { type: 'module' });
+    }
+    return ML_WORKER;
+};
 
 export function useCSVMapping() {
     const [parsedData, setParsedData] = useState<ParsedCSV | null>(null);
@@ -9,7 +19,9 @@ export function useCSVMapping() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isPhysical, setIsPhysical] = useState(false);
     const [physicalLenderName, setPhysicalLenderName] = useState<string>('');
+    const [allowDuplicateBarcodes, setAllowDuplicateBarcodes] = useState(false);
     const [isConsolidated, setIsConsolidated] = useState(false);
+    const lastSyncedRef = useRef<string>('');
     const [customTargetHeaders, setCustomTargetHeaders] = useState<string[]>(() => {
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('csvMapping_customTargetHeaders');
@@ -50,16 +62,14 @@ export function useCSVMapping() {
         return {};
     });
 
-    const worker = useRef<Worker | null>(null);
     const [mlReady, setMlReady] = useState(false);
     const [mlProgress, setMlProgress] = useState<any>(null);
 
-    // Initialize Web Worker
+    // Initialize Web Worker Singleton
     useEffect(() => {
-        if (!worker.current) {
-            worker.current = new Worker(new URL('../utils/mlWorker', import.meta.url), { type: 'module' });
-
-            worker.current.addEventListener('message', (event) => {
+        const worker = getMLWorker();
+        if (worker) {
+            const onMessage = (event: MessageEvent) => {
                 const { status, data, error } = event.data;
                 switch (status) {
                     case 'progress':
@@ -74,19 +84,19 @@ export function useCSVMapping() {
                         toast.error('Failed to initialize ML model.');
                         break;
                 }
-            });
+            };
 
-            // Start loading the model immediately
-            worker.current.postMessage({ action: 'loadModel' });
-        }
-
-        return () => {
-            if (worker.current) {
-                worker.current.terminate();
-                worker.current = null;
+            worker.addEventListener('message', onMessage);
+            // Start loading the model if it's not already ready
+            if (!mlReady) {
+                worker.postMessage({ action: 'loadModel' });
             }
-        };
-    }, []);
+
+            return () => {
+                worker.removeEventListener('message', onMessage);
+            };
+        }
+    }, [mlReady]);
 
 
 
@@ -113,8 +123,9 @@ export function useCSVMapping() {
 
     // Sync targets with ML worker whenever they change
     useEffect(() => {
-        if (worker.current) {
-            worker.current.postMessage({
+        const worker = getMLWorker();
+        if (worker && mlReady) {
+            worker.postMessage({
                 action: 'updateTargets',
                 payload: { targets: allTargetHeaders }
             });
@@ -127,15 +138,16 @@ export function useCSVMapping() {
     const processedData = useMemo(() => {
         if (!parsedData) return null;
 
-        // Deep copy data to avoid mutating state directly
-        let data = JSON.parse(JSON.stringify(parsedData.data));
-        let headers = [...parsedData.headers];
-
         // 1. Split Name Logic (New Feature)
         const fullNameMapping = activeMappings.find(m => m.targetHeader?.toLowerCase() === 'name');
+        
+        // Use shallow map for cloning to avoid deep copy bottlenecks on large datasets
+        let data = parsedData.data.map(row => ({ ...row })) as CsvRow[];
+        let headers = [...parsedData.headers];
+
         if (fullNameMapping) {
             let maxCoBorrowers = 0;
-            data.forEach((row: any) => {
+            data.forEach((row: CsvRow) => {
                 const rawName = row[fullNameMapping.sourceHeader];
                 if (typeof rawName === 'string') {
                     // Split by " and ", " And ", " AND ", " / ", "/", "\"
@@ -168,7 +180,7 @@ export function useCSVMapping() {
         );
 
         if (allPhoneMappings.length > 0) {
-            data.forEach((row: any) => {
+            data.forEach((row: CsvRow) => {
                 allPhoneMappings.forEach(mapping => {
                     const rawVal = row[mapping.sourceHeader];
                     if (rawVal) {
@@ -189,7 +201,7 @@ export function useCSVMapping() {
             const groups: Record<string, any[]> = {};
 
             // Group rows
-            data.forEach((row: any) => {
+            data.forEach((row: CsvRow) => {
                 const rawPhone = row[phoneMapping.sourceHeader];
                 const phone = rawPhone ? String(rawPhone).replace(/\D/g, '') : '';
 
@@ -406,17 +418,21 @@ export function useCSVMapping() {
             });
 
             if (targetMappingsToConsolidate.length > 0) {
-                groupValues.forEach(indices => {
+                groupValues.forEach((indices: number[]) => {
                     if (indices.length > 1) {
-                        targetMappingsToConsolidate.forEach(mapping => {
+                        targetMappingsToConsolidate.forEach((mapping: HeaderMapping) => {
                             let bestValue = '';
                             for (const idx of indices) {
-                                const val = data[idx][mapping.sourceHeader]?.trim();
-                                if (val) { bestValue = val; break; }
+                                const val = data[idx][mapping.sourceHeader];
+                                if (val !== undefined && val !== null && String(val).trim()) {
+                                    bestValue = String(val).trim();
+                                    break;
+                                }
                             }
                             if (bestValue) {
-                                indices.forEach(idx => {
-                                    if (!data[idx][mapping.sourceHeader]?.trim()) {
+                                indices.forEach((idx: number) => {
+                                    const currentVal = data[idx][mapping.sourceHeader];
+                                    if (currentVal === undefined || currentVal === null || !String(currentVal).trim()) {
                                         data[idx][mapping.sourceHeader] = bestValue;
                                     }
                                 });
@@ -444,7 +460,7 @@ export function useCSVMapping() {
                     });
 
                     indices.forEach(idx => {
-                        data[idx]['Total Outstanding (Auto)'] = total.toFixed(2);
+                        (data[idx] as any)['Total Outstanding (Auto)'] = total.toFixed(2);
                     });
                 });
                 if (!headers.includes('Total Outstanding (Auto)')) {
@@ -456,8 +472,9 @@ export function useCSVMapping() {
         // 3. DPD Logic (Compute Notice)
         const dpdMapping = activeMappings.find(m => m.targetHeader?.toLowerCase() === 'dpd');
         if (dpdMapping) {
-            data = data.map((row: any) => {
-                const dpdVal = parseInt(row[dpdMapping.sourceHeader], 10);
+            data = data.map((row: CsvRow) => {
+                const rawDpd = row[dpdMapping.sourceHeader];
+                const dpdVal = typeof rawDpd === 'number' ? rawDpd : parseInt(String(rawDpd || 0), 10);
                 const noticeVal = !isNaN(dpdVal) && dpdVal > 60 ? 'LRN' : 'LDN';
                 return { ...row, 'Notice (Auto)': noticeVal };
             });
@@ -479,7 +496,7 @@ export function useCSVMapping() {
             );
 
             // Check if every row has a mapped barcode available
-            const allRowsHaveBarcode = barcodeMapping && data.every((row: any) => {
+            const allRowsHaveBarcode = barcodeMapping && data.every((row: CsvRow) => {
                 const val = row[barcodeMapping.sourceHeader];
                 return val !== undefined && val !== null && String(val).trim() !== '';
             });
@@ -491,12 +508,18 @@ export function useCSVMapping() {
                 const finalAssignmentMap: Record<string, string> = {};
                 let nextBarcodeIdx = 0;
 
-                data = data.map((row: any) => {
+                const lanMapping = activeMappings.find(m =>
+                    m.targetHeader?.toLowerCase().includes('lan') ||
+                    m.targetHeader?.toLowerCase().includes('loan')
+                );
+
+                data = data.map((row: CsvRow) => {
                     let barcodeVal = '';
 
                     // 1. Check if the row already has a barcode from the source
-                    if (barcodeMapping && row[barcodeMapping.sourceHeader]?.trim()) {
-                        barcodeVal = row[barcodeMapping.sourceHeader].trim();
+                    const existingBc = barcodeMapping ? row[barcodeMapping.sourceHeader] : undefined;
+                    if (barcodeMapping && existingBc && String(existingBc).trim()) {
+                        barcodeVal = String(existingBc).trim();
                     }
                     // 2. Otherwise use fetched barcodes
                     else if (!fetchedBarcodes) {
@@ -506,20 +529,26 @@ export function useCSVMapping() {
                     } else {
                         const rawPhone = phoneMapping ? row[phoneMapping.sourceHeader] : '';
                         const phone = rawPhone ? String(rawPhone).replace(/\D/g, '') : '';
+                        const lan = lanMapping ? String(row[lanMapping.sourceHeader] || '').trim() : '';
 
-                        if (phone.length >= 10) {
-                            if (finalAssignmentMap[phone]) {
-                                barcodeVal = finalAssignmentMap[phone];
+                        // Logic for Duplicate (Grouped) or Unique Barcodes
+                        if (allowDuplicateBarcodes && (phone.length >= 10 || lan.length > 0)) {
+                            // Create a composite key if both exist, otherwise use one
+                            const key = phone && lan ? `${phone}_${lan}` : (phone || lan);
+
+                            if (finalAssignmentMap[key]) {
+                                barcodeVal = finalAssignmentMap[key];
                             } else {
                                 if (nextBarcodeIdx < fetchedBarcodes.length) {
                                     const bc = fetchedBarcodes[nextBarcodeIdx++];
-                                    finalAssignmentMap[phone] = bc.code;
+                                    finalAssignmentMap[key] = bc.code;
                                     barcodeVal = bc.code;
                                 } else {
                                     barcodeVal = 'No Barcode Available';
                                 }
                             }
                         } else {
+                            // Default: Unique Barcode for every row (or if not allowDuplicateBarcodes)
                             if (nextBarcodeIdx < fetchedBarcodes.length) {
                                 const bc = fetchedBarcodes[nextBarcodeIdx++];
                                 barcodeVal = bc.code;
@@ -561,14 +590,14 @@ export function useCSVMapping() {
             const stateHeader = stateMapping?.sourceHeader || headers.find(h => h.toLowerCase().includes('state'));
             const addressHeader = addressMapping?.sourceHeader || headers.find(h => h.toLowerCase().includes('address'));
 
-            data = data.map((row: any) => {
-                const newRow = { ...row, 'language1 (Auto)': 'English' };
+            data = data.map((row: CsvRow) => {
+                const newRow: CsvRow = { ...row, 'language1 (Auto)': 'English' };
                 let lang2 = '';
                 let loc = '';
 
                 // Prioritize state header first, then address
                 if (stateHeader && row[stateHeader]) loc += String(row[stateHeader]).toLowerCase() + ' ';
-                if (addressHeader && row[addressHeader]) loc += String(row[addressHeader]).toLowerCase();
+                if (addressHeader && row[addressHeader]) loc += String(addressHeader ? row[addressHeader] : '').toLowerCase();
 
                 const stateLanguageMap: Record<string, string> = {
                     'maharashtra': 'Marathi', 'mh': 'Marathi', 'mah': 'Marathi',
@@ -638,135 +667,157 @@ export function useCSVMapping() {
             data,
             headers,
         };
-    }, [parsedData, mappings, isConsolidated, isPhysical, fetchedBarcodes]);
+    }, [parsedData, mappings, isConsolidated, isPhysical, fetchedBarcodes, allowDuplicateBarcodes]);
 
-    // Effect to fetch barcodes when Physical is enabled
+    // Effect to fetch and sync barcodes
     useEffect(() => {
-        if (isPhysical && !fetchedBarcodes) {
-            const dataRows = parsedData?.data || [];
+        const syncBarcodes = async () => {
+            if (!isPhysical || !parsedData) return;
 
-            // 1. Calculate Needs
+            // 1. Calculate Needs (inline to avoid dependency issues)
+            const dataRows = parsedData?.data || [];
             const phoneMapping = activeMappings.find(m =>
                 m.targetHeader?.toLowerCase().includes('phone') ||
                 m.targetHeader?.toLowerCase().includes('mobile')
             );
-
             const barcodeMapping = activeMappings.find(m =>
                 m.targetHeader?.toLowerCase() === 'barcode'
             );
+            const lanMapping = activeMappings.find(m =>
+                m.targetHeader?.toLowerCase().includes('lan') ||
+                m.targetHeader?.toLowerCase().includes('loan')
+            );
 
-            const uniquePhones = new Set<string>();
-            let rowsWithoutPhone = 0;
+            const uniqueKeys = new Set<string>();
+            let rowsNeedingUniqueBarcode = 0;
+            const phoneToLanMap: Record<string, Set<string>> = {};
 
             dataRows.forEach((row: any) => {
-                // If the row already has a barcode, we don't need to fetch one
-                if (barcodeMapping && row[barcodeMapping.sourceHeader]?.trim()) {
-                    return;
-                }
+                if (barcodeMapping && row[barcodeMapping.sourceHeader]?.trim()) return;
 
                 const rawPhone = phoneMapping ? row[phoneMapping.sourceHeader] : '';
                 const phone = rawPhone ? String(rawPhone).replace(/\D/g, '') : '';
+                const lan = lanMapping ? String(row[lanMapping.sourceHeader] || '').trim() : '';
 
-                if (phone.length >= 10) {
-                    uniquePhones.add(phone);
+                if (allowDuplicateBarcodes && (phone.length >= 10 || lan.length > 0)) {
+                    const key = phone && lan ? `${phone}_${lan}` : (phone || lan);
+                    uniqueKeys.add(key);
+                    if (phone.length >= 10) {
+                        if (!phoneToLanMap[phone]) phoneToLanMap[phone] = new Set();
+                        if (lan) phoneToLanMap[phone].add(lan);
+                    }
                 } else {
-                    rowsWithoutPhone++;
+                    rowsNeedingUniqueBarcode++;
                 }
             });
 
-            const totalNeeded = uniquePhones.size + rowsWithoutPhone;
+            const totalNeeded = uniqueKeys.size + rowsNeedingUniqueBarcode;
 
-            if (totalNeeded > 0) {
-                fetch(`http://localhost:3000/api/barcodes?status=available&count=${totalNeeded}`)
-                    .then(res => res.json())
-                    .then(barcodes => {
-                        if (Array.isArray(barcodes)) {
-                            // 2. Perform Virtual Assignment for API Sync
-                            // We must match the exact logic of useMemo
-                            const updates: any[] = [];
-                            const assignmentMap: Record<string, any> = {};
-                            let nextBarcodeIdx = 0;
+            // Current metadata signature to detect changes
+            const currentMetadata = JSON.stringify({
+                lender: physicalLenderName,
+                duplicates: allowDuplicateBarcodes,
+                total: totalNeeded,
+                mapping: activeMappings.map(m => m.targetHeader).join(',')
+            });
 
-                            // Pre-calculate LANs by phone to send aggregated values
-                            const phoneToLanMap: Record<string, Set<string>> = {};
-                            const lanMapping = activeMappings.find(m =>
-                                m.targetHeader?.toLowerCase().includes('lan') ||
-                                m.targetHeader?.toLowerCase().includes('loan')
-                            );
+            const info = { dataRows, phoneMapping, lanMapping, barcodeMapping, phoneToLanMap };
 
-                            if (lanMapping) {
-                                dataRows.forEach((row: any) => {
-                                    if (barcodeMapping && row[barcodeMapping.sourceHeader]?.trim()) return;
+            // 2. If we need new barcodes, fetch them first
+            if (!fetchedBarcodes || fetchedBarcodes.length < totalNeeded) {
+                if (totalNeeded === 0) return;
 
-                                    const rawPhone = phoneMapping ? row[phoneMapping.sourceHeader] : '';
-                                    const phone = rawPhone ? String(rawPhone).replace(/\D/g, '') : '';
-                                    if (phone.length >= 10) {
-                                        if (!phoneToLanMap[phone]) phoneToLanMap[phone] = new Set();
-                                        const lanVal = row[lanMapping.sourceHeader];
-                                        if (lanVal) phoneToLanMap[phone].add(String(lanVal).trim());
-                                    }
-                                });
-                            }
+                console.log("Fetching barcodes from portal, count:", totalNeeded);
+                try {
+                    const res = await fetch(`${import.meta.env.VITE_BARCODE_PORTAL_URL}/api/barcodes?status=available&count=${totalNeeded}`);
+                    if (!res.ok) throw new Error("Failed to fetch");
+                    const barcodes = await res.json();
+                    if (Array.isArray(barcodes)) {
+                        setFetchedBarcodes(barcodes);
+                        performSync(barcodes, info, currentMetadata);
+                    }
+                } catch (err) {
+                    console.error("Barcode fetch failed", err);
+                    toast.error("Could not fetch barcodes from portal");
+                    setFetchedBarcodes([]);
+                }
+            } else if (currentMetadata !== lastSyncedRef.current) {
+                // 3. We already have barcodes, but metadata changed - RE-SYNC
+                performSync(fetchedBarcodes, info, currentMetadata);
+            }
+        };
 
-                            dataRows.forEach((row: any) => {
-                                if (barcodeMapping && row[barcodeMapping.sourceHeader]?.trim()) return;
+        const performSync = (barcodes: any[], info: any, metadata: string) => {
+            const { dataRows, phoneMapping, lanMapping, barcodeMapping, phoneToLanMap } = info;
+            const updates: any[] = [];
+            const assignmentMap: Record<string, any> = {};
+            let nextBarcodeIdx = 0;
 
-                                const rawPhone = phoneMapping ? row[phoneMapping.sourceHeader] : '';
-                                const phone = rawPhone ? String(rawPhone).replace(/\D/g, '') : '';
+            dataRows.forEach((row: any) => {
+                if (barcodeMapping && row[barcodeMapping.sourceHeader]?.trim()) return;
 
-                                if (phone.length >= 10) {
-                                    if (!assignmentMap[phone]) {
-                                        if (nextBarcodeIdx < barcodes.length) {
-                                            const bc = barcodes[nextBarcodeIdx++];
-                                            assignmentMap[phone] = bc;
+                const rawPhone = phoneMapping ? row[phoneMapping.sourceHeader] : '';
+                const phone = rawPhone ? String(rawPhone).replace(/\D/g, '') : '';
+                const lan = lanMapping ? String(row[lanMapping.sourceHeader] || '').trim() : '';
 
-                                            // Get aggregated LANs
-                                            const lanStr = phoneToLanMap[phone] ? Array.from(phoneToLanMap[phone]).join(', ') : '';
-                                            updates.push({ id: bc.id, lenderName: phone, lan: lanStr, bankName: physicalLenderName });
-                                        }
-                                    }
-                                    // If already mapped, no need to push another update (it's the same barcode)
-                                } else {
-                                    // No phone
-                                    if (nextBarcodeIdx < barcodes.length) {
-                                        const bc = barcodes[nextBarcodeIdx++];
-                                        updates.push({ id: bc.id, lenderName: 'Unknown', bankName: physicalLenderName });
-                                    }
-                                }
-                            });
+                if (allowDuplicateBarcodes && (phone.length >= 10 || lan.length > 0)) {
+                    const key = phone && lan ? `${phone}_${lan}` : (phone || lan);
+                    if (!assignmentMap[key]) {
+                        if (nextBarcodeIdx < barcodes.length) {
+                            const bc = barcodes[nextBarcodeIdx++];
+                            assignmentMap[key] = bc;
+                            const lanStr = phoneToLanMap[phone] ? Array.from(phoneToLanMap[phone]).join(', ') : lan;
+                            updates.push({ id: bc.id, lenderName: phone || 'Mixed', lan: lanStr || 'N/A', bankName: physicalLenderName });
+                        }
+                    }
+                } else {
+                    if (nextBarcodeIdx < barcodes.length) {
+                        const bc = barcodes[nextBarcodeIdx++];
+                        updates.push({ id: bc.id, lenderName: phone || 'Unknown', lan: lan || 'N/A', bankName: physicalLenderName });
+                    }
+                }
+            });
 
-                            setFetchedBarcodes(barcodes);
-
-                            // Send updates back
-                            if (updates.length > 0) {
-                                fetch('http://localhost:3000/api/barcodes', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ action: 'markUsed', updates })
-                                })
-                                    .then(() => {
-                                        // Successfully marked in backend, tell dashboard to reload Barcode Portal
-                                        if (typeof window !== 'undefined') {
-                                            window.parent.postMessage({ type: 'RELOAD_APP', appId: 'barcode' }, '*');
-                                        }
-                                    })
-                                    .catch(err => console.error("Failed to sync barcodes", err));
-                            }
+            if (updates.length > 0) {
+                console.log("Marking barcodes as used in portal:", updates.length);
+                fetch(`${import.meta.env.VITE_BARCODE_PORTAL_URL}/api/barcodes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'markUsed', updates })
+                })
+                    .then(async response => {
+                        if (!response.ok) throw new Error("Sync failed");
+                        lastSyncedRef.current = metadata;
+                        console.log("Barcode portal updated successfully");
+                        toast.success(`Successfully synced ${updates.length} barcodes`);
+                        
+                        // 1. Broadcast to other tabs
+                        if (typeof window !== 'undefined') {
+                            const bc = new BroadcastChannel('barcode_sync');
+                            bc.postMessage('refresh');
+                            bc.close();
+                            
+                            // 2. Also try window messages for good measure (frame cases)
+                            window.parent.postMessage({ type: 'RELOAD_APP', appId: 'barcode' }, '*');
+                            window.parent.postMessage({ type: 'APP_RELOAD', appId: 'barcode' }, '*');
                         }
                     })
                     .catch(err => {
-                        console.error("Failed to fetch barcodes", err);
-                        setFetchedBarcodes([]); // Stop infinite loading
+                        console.error("Barcode portal update failed", err);
+                        toast.error("Failed to update barcode in portal");
                     });
-            } else {
-                setFetchedBarcodes([]);
             }
-        }
-        // If Physical is turned off, clear fetched barcodes?
+        };
+
+        syncBarcodes();
+    }, [isPhysical, parsedData, activeMappings, physicalLenderName, allowDuplicateBarcodes, fetchedBarcodes]);
+
+    useEffect(() => {
         if (!isPhysical) {
             setFetchedBarcodes(null);
+            lastSyncedRef.current = '';
         }
-    }, [isPhysical, parsedData, activeMappings, physicalLenderName]);
+    }, [isPhysical]);
 
     // Sync generated headers to mappings so they appear in Preview/Export
     useEffect(() => {
@@ -883,33 +934,63 @@ export function useCSVMapping() {
 
             const newCustomHeaders: string[] = [];
 
-            // ML-based mapping with fallback to heuristics
-            const rawMappings: any[] = await new Promise((resolve) => {
-                if (!worker.current || !mlReady) {
-                    console.log("ML not ready, falling back to heuristic matching");
-                    resolve(mapHeaders(parsed.headers, [...TARGET_HEADERS, ...customTargetHeaders], dataSamples));
-                    return;
-                }
+            // AI-based mapping using Gemini (Backend) with Local Worker as Fallback
+            let rawMappings: any[] = [];
+            const aiPortalUrl = import.meta.env.VITE_AI_PORTAL_URL || 'http://localhost:8000';
 
-                const msgHandler = (event: MessageEvent) => {
-                    const { status, data, error } = event.data;
-                    if (status === 'complete') {
-                        worker.current?.removeEventListener('message', msgHandler);
-                        resolve(data.mappings);
-                    } else if (status === 'error') {
-                        worker.current?.removeEventListener('message', msgHandler);
-                        console.error("ML Error:", error);
-                        // Fallback
-                        resolve(mapHeaders(parsed.headers, [...TARGET_HEADERS, ...customTargetHeaders], dataSamples));
-                    }
-                };
-
-                worker.current.addEventListener('message', msgHandler);
-                worker.current.postMessage({
-                    action: 'mapColumns',
-                    payload: { columns: parsed.headers }
+            try {
+                console.log("Attempting Gemini Mapping via Backend...");
+                const response = await fetch(`${aiPortalUrl}/map`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        placeholders: parsed.headers, // The backend calls it placeholders but it uses it as source columns
+                        source_columns: parsed.headers
+                    })
                 });
-            });
+
+                if (response.ok) {
+                    const geminiResults = await response.json();
+                    // Transform Gemini results into the format expected by the frontend
+                    rawMappings = geminiResults.map((m: any) => ({
+                        source_column: m.placeholder,
+                        predicted_target: m.suggested_column,
+                        confidence_score: m.confidence
+                    }));
+                    console.log("Gemini Mapping Successful.");
+                } else {
+                    throw new Error("Backend mapping failed");
+                }
+            } catch (err) {
+                console.log("Gemini/Backend mapping failed, falling back to local ML worker:", err);
+                rawMappings = await new Promise((resolve) => {
+                    const worker = getMLWorker();
+                    if (!worker || !mlReady) {
+                        console.log("ML not ready, falling back to heuristic matching");
+                        resolve(mapHeaders(parsed.headers, [...TARGET_HEADERS, ...customTargetHeaders], dataSamples));
+                        return;
+                    }
+
+                    const msgHandler = (event: MessageEvent) => {
+                        const { status, data, error } = event.data;
+                        if (status === 'complete') {
+                            worker.removeEventListener('message', msgHandler);
+                            resolve(data.mappings);
+                        } else if (status === 'error') {
+                            worker.removeEventListener('message', msgHandler);
+                            console.error("ML Error:", error);
+                            // Fallback to Heuristics
+                            resolve(mapHeaders(parsed.headers, [...TARGET_HEADERS, ...customTargetHeaders], dataSamples));
+                        }
+                    };
+
+                    worker.addEventListener('message', msgHandler);
+                    worker.postMessage({
+                        action: 'mapColumns',
+                        payload: { columns: parsed.headers }
+                    });
+                });
+            }
 
             let autoMappings: HeaderMapping[] = [];
             if (rawMappings.length > 0 && typeof rawMappings[0].predicted_target !== 'undefined') {
@@ -1070,7 +1151,7 @@ export function useCSVMapping() {
                 const isDuplicateMatch = (target: string, search: string) => {
                     if (target === search) return true;
                     if (target.startsWith(search)) {
-                        return /^\\d+$/.test(target.slice(search.length));
+                        return /^\d+$/.test(target.slice(search.length).trim()); // Added trim for robustness
                     }
                     return false;
                 };
@@ -1085,11 +1166,11 @@ export function useCSVMapping() {
 
                     if (isMultiColumn) {
                         let counter = 1;
-                        let numberedTarget = `${newTarget}${counter}`;
+                        let numberedTarget = `${newTarget} ${counter}`; // Added space for consistency
 
                         while (updated.some((m, i) => i !== index && m.targetHeader === numberedTarget)) {
                             counter++;
-                            numberedTarget = `${newTarget}${counter}`;
+                            numberedTarget = `${newTarget} ${counter}`; // Added space for consistency
                         }
 
                         newTarget = numberedTarget;
@@ -1175,8 +1256,9 @@ export function useCSVMapping() {
 
                 // Auto-map to these new columns if possible using ML
                 const unmappedSources = mappings.filter(m => m.targetHeader === null).map(m => m.sourceHeader);
+                const worker = getMLWorker();
 
-                if (unmappedSources.length > 0 && worker.current && mlReady) {
+                if (unmappedSources.length > 0 && worker && mlReady) {
                     const toastId = toast.loading("Analyzing new column using AI...");
 
                     try {
@@ -1184,16 +1266,16 @@ export function useCSVMapping() {
                             const msgHandler = (event: MessageEvent) => {
                                 const { status, data, error } = event.data;
                                 if (status === 'complete_custom') {
-                                    worker.current?.removeEventListener('message', msgHandler);
+                                    worker.removeEventListener('message', msgHandler);
                                     resolve(data.mappings);
                                 } else if (status === 'error') {
-                                    worker.current?.removeEventListener('message', msgHandler);
+                                    worker.removeEventListener('message', msgHandler);
                                     reject(error);
                                 }
                             };
 
-                            worker.current!.addEventListener('message', msgHandler);
-                            worker.current!.postMessage({
+                            worker.addEventListener('message', msgHandler);
+                            worker.postMessage({
                                 action: 'mapToCustomTargets',
                                 payload: {
                                     sources: unmappedSources,
@@ -1292,16 +1374,20 @@ export function useCSVMapping() {
         return false;
     };
 
-    const handlePhysicalToggle = (lenderName?: string) => {
+    const handlePhysicalToggle = (lenderName?: string, duplicateBarcodes?: boolean) => {
         const newIsPhysical = !isPhysical;
         setIsPhysical(newIsPhysical);
 
         if (newIsPhysical && lenderName) {
             setPhysicalLenderName(lenderName);
+            if (duplicateBarcodes !== undefined) {
+                setAllowDuplicateBarcodes(duplicateBarcodes);
+            }
         }
 
         if (!newIsPhysical) {
             setPhysicalLenderName('');
+            setAllowDuplicateBarcodes(false);
             setMappings((prev) =>
                 prev.map((mapping) =>
                     mapping.targetHeader === 'barcode'
@@ -1343,8 +1429,8 @@ export function useCSVMapping() {
         // Preserve defined order of active mappings
         activeMappings.forEach(m => finalHeaders.add(m.targetHeader!));
 
-        const mappedRows = processedData.data.map((row: any) => {
-            const newRow: Record<string, string> = {};
+        const mappedRows = processedData.data.map((row: CsvRow) => {
+            const newRow: Record<string, any> = {};
 
             Object.keys(row).forEach(key => {
                 const mapping = activeMappings.find(m => m.sourceHeader === key);
@@ -1376,6 +1462,7 @@ export function useCSVMapping() {
         mlReady,
         mlProgress,
         isPhysical,
+        allowDuplicateBarcodes,
         isConsolidated,
         customTargetHeaders,
         deletedTargetHeaders,

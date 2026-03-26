@@ -4,33 +4,37 @@ import { useState } from 'react';
 
 interface PhysicalToggleProps {
     isPhysical: boolean;
-    onToggle: (lenderName?: string) => void;
+    allowDuplicateBarcodes?: boolean;
+    onToggle: (lenderName?: string, allowDuplicate?: boolean) => void;
 }
 
-export function PhysicalToggle({ isPhysical, onToggle }: PhysicalToggleProps) {
+export function PhysicalToggle({ isPhysical, allowDuplicateBarcodes, onToggle }: PhysicalToggleProps) {
     const [showModal, setShowModal] = useState(false);
     const [lenderName, setLenderName] = useState('');
+    const [duplicateBarcodes, setDuplicateBarcodes] = useState(false);
 
     const handleToggleClick = () => {
         if (!isPhysical) {
             // Turning ON
             setShowModal(true);
+            setDuplicateBarcodes(false); // Default to Unique
         } else {
             // Turning OFF
             onToggle();
             setLenderName('');
+            setDuplicateBarcodes(false);
         }
     };
 
     const handleConfirm = () => {
         if (lenderName.trim()) {
-            onToggle(lenderName.trim());
+            onToggle(lenderName.trim(), duplicateBarcodes);
             setShowModal(false);
         }
     };
 
     return (
-        <div className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="group relative z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-xl transition-all duration-300 ${isPhysical
@@ -43,7 +47,7 @@ export function PhysicalToggle({ isPhysical, onToggle }: PhysicalToggleProps) {
                         <p className="font-semibold text-gray-900 dark:text-white">Physical Document Mode</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
                             {isPhysical
-                                ? '✓ Barcode column is available for mapping'
+                                ? `✓ Barcode available (${allowDuplicateBarcodes ? 'Duplicates ON' : 'Unique only'})`
                                 : 'Enable to include barcode column in mapping'}
                         </p>
                     </div>
@@ -70,8 +74,8 @@ export function PhysicalToggle({ isPhysical, onToggle }: PhysicalToggleProps) {
 
             {/* Lender Name Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 relative animate-in fade-in zoom-in duration-200 border border-gray-100 dark:border-gray-700">
                         <button
                             onClick={() => setShowModal(false)}
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -102,19 +106,40 @@ export function PhysicalToggle({ isPhysical, onToggle }: PhysicalToggleProps) {
                                         if (e.key === 'Escape') setShowModal(false);
                                     }}
                                 />
+
+                                <div className="mt-4 p-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-xl">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">Duplicate Barcodes</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                                                Assign same barcode to same ID + Phone
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setDuplicateBarcodes(!duplicateBarcodes)}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${duplicateBarcodes ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                                                }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${duplicateBarcodes ? 'translate-x-6' : 'translate-x-1'
+                                                    }`}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex justify-end gap-3 mt-6">
+                            <div className="flex justify-end gap-3 pt-2">
                                 <button
                                     onClick={() => setShowModal(false)}
-                                    className="px-5 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium rounded-xl transition-colors"
+                                    className="px-5 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium rounded-xl transition-colors text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleConfirm}
                                     disabled={!lenderName.trim()}
-                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm"
                                 >
                                     Confirm
                                 </button>

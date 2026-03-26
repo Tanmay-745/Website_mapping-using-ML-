@@ -130,6 +130,35 @@ export async function translateText(text: string, targetLang: string): Promise<s
     }
 }
 
+export async function translateWithAccuracy(text: string, targetLang: string): Promise<{ translatedText: string, accuracy: number, reason: string }> {
+    try {
+        const response = await fetch(`${API_BASE}/api/translate-with-accuracy`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text, target_lang: targetLang }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        
+        return {
+            translatedText: data.translated_text || data.translatedText,
+            accuracy: data.accuracy || 0,
+            reason: data.reason || ""
+        };
+    } catch (error) {
+        console.error("Failed to translate text with accuracy:", error);
+        throw error;
+    }
+}
+
 export async function searchTemplates(lender: string, type: string): Promise<string[]> {
     try {
         const response = await fetch(`${API_BASE}/api/templates/search?lender=${encodeURIComponent(lender)}&type=${encodeURIComponent(type)}`);

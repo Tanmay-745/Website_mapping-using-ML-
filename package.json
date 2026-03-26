@@ -10,7 +10,7 @@
         "dev:mapping": "npm run dev --prefix \"Legal mapping\"",
         "dev:ai": "npm run dev:frontend --prefix \"legal pro/AI Legal Portal\"",
         "dev:ai-proxy": "node \"legal pro/AI Legal Portal/local_server.js\"",
-        "dev:translator": "cd \"legal pro/AI Legal Portal/language-translator-main\" && python main.py",
+        "dev:translator": "cd \"legal pro/AI Legal Portal\" && python ml_mapping_service.py",
         "dev:dashboard": "npm run dev:dashboard --prefix dashboard",
         "dev:backend": "python backend/main.py",
         "dev:coverletter": "npm run dev --prefix CoverLetterApp",

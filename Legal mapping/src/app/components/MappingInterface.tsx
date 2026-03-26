@@ -85,7 +85,7 @@ export function MappingInterface({
   const handleToggleManageColumns = () => {
     if (!showManageColumns) {
       const password = window.prompt("Enter password to manage target columns:");
-      if (password === "Tanmay123") {
+      if (password === import.meta.env.VITE_ADMIN_PASSWORD) {
         setShowManageColumns(true);
       } else if (password !== null) {
         alert("Incorrect password!");
@@ -114,105 +114,99 @@ export function MappingInterface({
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {mappings.map((mapping, index) => (
             <div
               key={index}
-              className="group flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 dark:from-gray-800/50 dark:to-blue-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 rounded-xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 hover:border-blue-300/50 dark:hover:border-blue-600/50 hover:shadow-md"
+              className="group flex items-center gap-3 p-2 bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 dark:from-gray-800/50 dark:to-blue-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 rounded-lg transition-all duration-300 border border-gray-100 dark:border-gray-700/50 hover:border-blue-200 dark:hover:border-blue-700/50 hover:shadow-sm"
             >
               {/* Source Header */}
-              <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wide">
-                  Source Column
-                </label>
-                <div className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-900 dark:text-gray-200 shadow-sm">
-                  {mapping.sourceHeader}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Src</span>
+                  <div className="flex-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md font-medium text-gray-800 dark:text-gray-200 shadow-sm truncate text-sm" title={mapping.sourceHeader}>
+                    {mapping.sourceHeader}
+                  </div>
                 </div>
               </div>
 
               {/* Arrow */}
-              <div className="flex-shrink-0 mt-6">
-                <ArrowRight className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors group-hover:translate-x-1 duration-300" />
+              <div className="flex-shrink-0">
+                <ArrowRight className="w-4 h-4 text-blue-400 dark:text-blue-500 group-hover:text-purple-500 transition-colors" />
               </div>
 
               {/* Target Header Dropdown or Input */}
-              <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wide">
-                  Target Column
-                </label>
-                {editingIndex === index ? (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveEdit(index);
-                        if (e.key === 'Escape') handleCancelEdit();
-                      }}
-                      className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-blue-500 dark:border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm dark:text-gray-100"
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => handleSaveEdit(index)}
-                      className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <select
-                      value={mapping.targetHeader || ''}
-                      onChange={(e) =>
-                        onMappingChange(
-                          index,
-                          e.target.value === '' ? null : e.target.value
-                        )
-                      }
-                      className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm font-medium dark:text-gray-100"
-                    >
-                      <option value="">-- Skip Column --</option>
-                      {filteredHeaders.map((header, headerIdx) => (
-                        <option key={`${header}-${headerIdx}`} value={header}>
-                          {header}
-                        </option>
-                      ))}
-                    </select>
-                    {mapping.targetHeader && (
+              <div className="flex-[1.2] min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Dst</span>
+                  {editingIndex === index ? (
+                    <div className="flex-1 flex gap-1">
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEdit(index);
+                          if (e.key === 'Escape') handleCancelEdit();
+                        }}
+                        className="flex-1 px-3 py-1 bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 rounded-md focus:outline-none shadow-sm dark:text-gray-100 text-sm"
+                        autoFocus
+                      />
                       <button
-                        onClick={() =>
-                          handleStartEdit(index, mapping.targetHeader!)
-                        }
-                        className="px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 flex items-center gap-1 shadow-sm hover:shadow-md"
-                        title="Rename target column"
+                        onClick={() => handleSaveEdit(index)}
+                        className="px-2 py-1 bg-blue-600 text-white rounded-md text-xs font-medium"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        Save
                       </button>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex gap-1 items-center">
+                      <select
+                        value={mapping.targetHeader || ''}
+                        onChange={(e) =>
+                          onMappingChange(
+                            index,
+                            e.target.value === '' ? null : e.target.value
+                          )
+                        }
+                        className="flex-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all shadow-sm font-medium dark:text-gray-100 text-sm"
+                      >
+                        <option value="">-- Skip --</option>
+                        {filteredHeaders.map((header, headerIdx) => (
+                          <option key={`${header}-${headerIdx}`} value={header}>
+                            {header}
+                          </option>
+                        ))}
+                      </select>
+                      {mapping.targetHeader && (
+                        <button
+                          onClick={() =>
+                            handleStartEdit(index, mapping.targetHeader!)
+                          }
+                          className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"
+                          title="Rename"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Confidence Badge */}
-              <div className="flex-shrink-0 mt-6">
+              <div className="flex-shrink-0 w-20 flex justify-end">
                 {mapping.confidence > 0 ? (
                   <span
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 shadow-sm ${getConfidenceColor(
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getConfidenceColor(
                       mapping.confidence
                     )}`}
                   >
                     {getConfidenceLabel(mapping.confidence)}
                   </span>
                 ) : (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-600">
-                    Skipped
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-400 border border-gray-200 dark:border-gray-600">
+                    Skip
                   </span>
                 )}
               </div>

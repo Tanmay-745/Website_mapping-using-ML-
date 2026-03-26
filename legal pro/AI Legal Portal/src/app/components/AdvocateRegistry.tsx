@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, Search, Edit2, Trash2, 
+import {
+  Plus, Search, Edit2, Trash2,
   MapPin, Phone, Building, Briefcase,
   X, Image as ImageIcon, Type
 } from 'lucide-react';
@@ -28,7 +28,7 @@ export function AdvocateRegistry() {
 
   useEffect(() => { loadAdvocates(); }, []);
 
-  const filteredAdvocates = advocates.filter(a => 
+  const filteredAdvocates = advocates.filter(a =>
     a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (a.companyName && a.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -60,14 +60,14 @@ export function AdvocateRegistry() {
           <div className="flex items-center gap-4 w-full max-w-2xl justify-end">
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input 
-                placeholder="Search by name" 
+              <Input
+                placeholder="Search by name"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-11 bg-gray-50 dark:bg-gray-900 border-gray-200"
               />
             </div>
-            <Button 
+            <Button
               onClick={() => {
                 setIsModalOpen(true);
               }}
@@ -84,10 +84,9 @@ export function AdvocateRegistry() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredAdvocates.map((advocate) => (
           <Card key={advocate.id} className="p-6 bg-white dark:bg-gray-800 relative group overflow-hidden border-none shadow-sm ring-1 ring-gray-100 dark:ring-gray-700 hover:shadow-md transition-all">
-            <div className={`absolute top-0 left-0 w-1.5 h-full ${
-              advocate.companyName ? 'bg-emerald-500' : 'bg-blue-500'
-            }`} />
-            
+            <div className={`absolute top-0 left-0 w-1.5 h-full ${advocate.companyName ? 'bg-emerald-500' : 'bg-blue-500'
+              }`} />
+
             <div className="flex items-start justify-between">
               <div className="space-y-3">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -99,17 +98,17 @@ export function AdvocateRegistry() {
                   </p>
                   {advocate.companyName && (
                     <p className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                       <Building className="w-3 h-3" /> {advocate.companyName}
+                      <Building className="w-3 h-3" /> {advocate.companyName}
                     </p>
                   )}
-                   {advocate.city && (
+                  {advocate.city && (
                     <p className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                       <MapPin className="w-3 h-3" /> {advocate.city}, {advocate.state}
+                      <MapPin className="w-3 h-3" /> {advocate.city}, {advocate.state}
                     </p>
                   )}
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => {
                   setEditingAdvocateId(advocate.id);
                   setIsModalOpen(true);
@@ -120,8 +119,8 @@ export function AdvocateRegistry() {
                 <Edit2 className="w-4 h-4" />
               </button>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => handleDelete(advocate.id)}
               className="absolute bottom-4 right-4 p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
             >
@@ -131,15 +130,15 @@ export function AdvocateRegistry() {
         ))}
       </div>
 
-      <AdvocatesModal 
-        isOpen={isModalOpen} 
+      <AdvocatesModal
+        isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
           setEditingAdvocateId(null);
           loadAdvocates();
         }}
         initialEditingId={editingAdvocateId}
-        initialView={editingAdvocateId ? 'form' : 'list'}
+        initialView='form'
       />
     </div>
   );

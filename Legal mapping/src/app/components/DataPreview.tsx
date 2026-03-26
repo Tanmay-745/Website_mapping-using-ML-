@@ -1,11 +1,11 @@
 import { FileSpreadsheet } from 'lucide-react';
-import { ParsedCSV } from '../utils/csvParser';
+import { ParsedCSV, CsvRow } from '../utils/csvParser';
 import { HeaderMapping } from '../utils/headerMatcher';
 
 interface DataPreviewProps {
     parsedData: ParsedCSV;
     mappings: HeaderMapping[];
-    exportResult: { data: Record<string, string>[], headers: string[] } | null;
+    exportResult: { data: CsvRow[], headers: string[] } | null;
 }
 
 export function DataPreview({ parsedData, mappings, exportResult }: DataPreviewProps) {
@@ -36,13 +36,14 @@ export function DataPreview({ parsedData, mappings, exportResult }: DataPreviewP
                 </div>
             </div>
             <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700/50">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs border-collapse">
                     <thead>
                         <tr className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
                             {headers.map((header, index) => (
                                 <th
                                     key={index}
-                                    className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 border-b-2 border-blue-200 dark:border-blue-900/50"
+                                    className="text-left px-2 py-2 font-semibold text-gray-700 dark:text-gray-300 border-b-2 border-blue-200 dark:border-blue-900/50 whitespace-nowrap max-w-[150px] truncate"
+                                    title={header}
                                 >
                                     {header}
                                 </th>
@@ -53,7 +54,11 @@ export function DataPreview({ parsedData, mappings, exportResult }: DataPreviewP
                         {displayData.map((row: any, rowIndex) => (
                             <tr key={rowIndex} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/30 transition-colors">
                                 {headers.map((header, colIndex) => (
-                                    <td key={colIndex} className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                                    <td 
+                                        key={colIndex} 
+                                        className="px-2 py-1.5 text-gray-600 dark:text-gray-400 border-r border-gray-50 dark:border-gray-800/50 last:border-r-0 max-w-[150px] truncate whitespace-nowrap"
+                                        title={String(row[header] || '')}
+                                    >
                                         {row[header] || ''}
                                     </td>
                                 ))}

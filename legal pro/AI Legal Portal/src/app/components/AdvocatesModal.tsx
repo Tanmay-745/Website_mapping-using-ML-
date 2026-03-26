@@ -27,6 +27,56 @@ interface AdvocatesModalProps {
     initialView?: 'list' | 'form';
 }
 
+const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+  "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+  "Uttar Pradesh", "Uttarakhand", "West Bengal",
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+  "Lakshadweep", "Delhi", "Puducherry", "Ladakh", "Jammu and Kashmir"
+];
+
+const STATE_CITIES: Record<string, string[]> = {
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
+  "Arunachal Pradesh": ["Itanagar", "Tawang", "Ziro", "Pasighat"],
+  "Assam": ["Guwahati", "Dibrugarh", "Silchar", "Jorhat"],
+  "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur"],
+  "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba"],
+  "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa"],
+  "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
+  "Haryana": ["Faridabad", "Gurgaon", "Panipat", "Ambala", "Yamunanagar"],
+  "Himachal Pradesh": ["Shimla", "Mandi", "Dharamshala", "Solan"],
+  "Jharkhand": ["Jamshedpur", "Dhanbad", "Ranchi", "Bokaro Steel City"],
+  "Karnataka": ["Bangalore", "Hubli-Dharwad", "Mysore", "Gulbarga", "Belgaum"],
+  "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Kollam", "Thrissur"],
+  "Madhya Pradesh": ["Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain"],
+  "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane", "Pimpri-Chinchwad", "Nashik", "Kalyan-Dombivli", "Vasai-Virar", "Aurangabad", "Navi Mumbai"],
+  "Manipur": ["Imphal", "Thoubal", "Bishnupur"],
+  "Meghalaya": ["Shillong", "Tura", "Jowai"],
+  "Mizoram": ["Aizawl", "Lunglei", "Champhai"],
+  "Nagaland": ["Dimapur", "Kohima", "Tuensang"],
+  "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur"],
+  "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Pathankot", "Hoshiarpur"],
+  "Rajasthan": ["Jaipur", "Jodhpur", "Kota", "Bikaner", "Ajmer", "Udaipur"],
+  "Sikkim": ["Gangtok", "Namchi", "Geyzing"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tiruppur"],
+  "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Khammam"],
+  "Tripura": ["Agartala", "Udaipur", "Dharmanagar"],
+  "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Meerut", "Varanasi", "Prayagraj", "Bareilly", "Noida"],
+  "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Haldwani"],
+  "West Bengal": ["Kolkata", "Howrah", "Asansol", "Siliguri", "Durgapur"],
+  "Andaman and Nicobar Islands": ["Port Blair"],
+  "Chandigarh": ["Chandigarh"],
+  "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Silvassa"],
+  "Lakshadweep": ["Kavaratti"],
+  "Delhi": ["New Delhi", "North Delhi", "South Delhi", "West Delhi", "East Delhi"],
+  "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam"],
+  "Ladakh": ["Leh", "Kargil"],
+  "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"]
+};
+
 export function AdvocatesModal({ 
   isOpen, 
   onClose, 
@@ -343,12 +393,22 @@ export function AdvocatesModal({
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="city">City *</Label>
-                                <Input
-                                    id="city"
-                                    placeholder="Enter city"
+                                <Select
                                     value={formData.city}
-                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                />
+                                    onValueChange={(value) => setFormData({ ...formData, city: value })}
+                                    disabled={!formData.state}
+                                >
+                                    <SelectTrigger id="city">
+                                        <SelectValue placeholder={formData.state ? "Select City" : "First Select State"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {(STATE_CITIES[INDIAN_STATES.find(s => s.toLowerCase().replace(/\s+/g, '') === formData.state) || ""] || []).map((city) => (
+                                            <SelectItem key={city} value={city}>
+                                                {city}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="pincode">PinCode *</Label>
@@ -363,17 +423,17 @@ export function AdvocatesModal({
                                 <Label htmlFor="state">Select State</Label>
                                 <Select
                                     value={formData.state}
-                                    onValueChange={(value) => setFormData({ ...formData, state: value })}
+                                    onValueChange={(value) => setFormData({ ...formData, state: value, city: "" })}
                                 >
                                     <SelectTrigger id="state">
                                         <SelectValue placeholder="Select State" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="maharashtra">Maharashtra</SelectItem>
-                                        <SelectItem value="delhi">Delhi</SelectItem>
-                                        <SelectItem value="karnataka">Karnataka</SelectItem>
-                                        <SelectItem value="tamilnadu">Tamil Nadu</SelectItem>
-                                        {/* Add more states as needed */}
+                                        {INDIAN_STATES.map((state) => (
+                                            <SelectItem key={state} value={state.toLowerCase().replace(/\s+/g, '')}>
+                                                {state}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>

@@ -201,6 +201,39 @@ async function POST(request) {
                 usedAt: undefined,
                 resetAt: undefined
             } : b);
+    } else if (action === 'editLenderName') {
+        const { oldLenderName, newLenderName } = body;
+        if (oldLenderName && newLenderName) {
+            barcodes = barcodes.map((b)=>{
+                const bLender = b.bankName && b.bankName.trim() !== "" ? b.bankName : "Unknown Lender";
+                if (b.isUsed && bLender === oldLenderName) {
+                    return {
+                        ...b,
+                        bankName: newLenderName
+                    };
+                }
+                return b;
+            });
+        }
+    } else if (action === 'resetByLender') {
+        const targetLender = body.targetLender;
+        if (targetLender) {
+            barcodes = barcodes.map((b)=>{
+                const isMatch = targetLender === "Unknown Lender" ? !b.bankName || b.bankName.trim() === "" : b.bankName === targetLender;
+                if (isMatch && b.isUsed) {
+                    return {
+                        ...b,
+                        isUsed: false,
+                        lenderName: '',
+                        bankName: undefined,
+                        lan: '',
+                        usedAt: undefined,
+                        resetAt: undefined
+                    };
+                }
+                return b;
+            });
+        }
     } else if (action === 'add' && newBarcodes) {
         const newBarcodesArray = newBarcodes;
         // Validate and merge
