@@ -13,9 +13,10 @@
         "dev:translator": "cd \"legal pro/AI Legal Portal\" && python ml_mapping_service.py",
         "dev:dashboard": "npm run dev:dashboard --prefix dashboard",
         "dev:backend": "python backend/main.py",
+        "dev:dpd": "npm run dev --prefix DPD",
         "dev:coverletter": "npm run dev --prefix CoverLetterApp",
         "dev:portal": "npx vite . --port 8080",
-        "dev": "concurrently \"npm run dev:portal\" \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:ai\" \"npm run dev:ai-proxy\" \"npm run dev:translator\" \"npm run dev:mapping\" \"npm run dev:barcode\" \"npm run dev:coverletter\"",
+        "dev": "concurrently \"npm run dev:portal\" \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:ai\" \"npm run dev:ai-proxy\" \"npm run dev:translator\" \"npm run dev:mapping\" \"npm run dev:barcode\" \"npm run dev:dpd\" \"npm run dev:coverletter\"",
         "build": "mkdir -p dist/dashboard dist/mapping dist/ai && npm run build --prefix dashboard && cp -r dashboard/dist/* dist/dashboard/ && npm run build --prefix \"Legal mapping\" && cp -r \"Legal mapping\"/dist/* dist/mapping/ && npm run build --prefix \"legal pro/AI Legal Portal\" && cp -r \"legal pro/AI Legal Portal\"/dist/* dist/ai/ && cp index.html dist/",
         "build:prod": "node sync-env.js && npm run build"
     },

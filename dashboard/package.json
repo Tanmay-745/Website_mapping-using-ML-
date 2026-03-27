@@ -4,11 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm:dev:dashboard\" \"npm:dev:legal-pro\" \"npm:dev:legal-mapping\" \"npm:dev:barcode\"",
+    "dev": "concurrently \"npm:dev:dashboard\" \"npm:dev:legal-pro\" \"npm:dev:legal-mapping\" \"npm:dev:barcode\" \"npm:dev:dpd\"",
     "dev:dashboard": "vite",
     "dev:legal-pro": "npm run dev --prefix \"../legal pro/AI Legal Portal\"",
     "dev:legal-mapping": "npm run dev --prefix \"../Legal mapping\"",
-    "dev:barcode": "npm run dev --prefix \"../Barcode-1\"",
+    "dev:barcode": "npm run dev --prefix ../Barcode-1",
+    "dev:dpd": "npm run dev --prefix ../DPD",
+    "dev:portal": "npm run dev --prefix \"../legal pro/AI Legal Portal\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

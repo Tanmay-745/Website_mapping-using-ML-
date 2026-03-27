@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { FileText, Database, ScanLine, X, Sun, Moon, Mail } from 'lucide-react';
+import { FileText, Database, ScanLine, X, Sun, Moon, Mail, Activity } from 'lucide-react';
 
 // Configuration for the apps
 const APPS = [
-  { id: 'legal-pro', name: 'Legal Pro', url: 'http://localhost:3001', icon: FileText },
-  { id: 'legal-mapping', name: 'Legal Mapping', url: 'http://localhost:5173', icon: Database },
+  { id: 'legal-pro', name: 'Legal Pro', url: 'http://localhost:3001/ai/', icon: FileText },
+  { id: 'legal-mapping', name: 'Legal Mapping', url: 'http://localhost:5174/mapping/', icon: Database },
   { id: 'barcode', name: 'Barcode', url: 'http://localhost:3000', icon: ScanLine },
-  { id: 'cover-letter', name: 'Cover Letter', url: 'http://localhost:5001', icon: Mail }
+  { id: 'cover-letter', name: 'Cover Letter', url: 'http://localhost:5001', icon: Mail },
+  { id: 'dpd-tracker', name: 'DPD Tracker', url: 'http://localhost:5173', icon: Activity }
 ];
 
 function App() {

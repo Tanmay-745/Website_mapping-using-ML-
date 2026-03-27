@@ -1,0 +1,10 @@
+{
+  "name": "dpd-tracker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite preview --port 5174 --host",
+    "preview": "vite preview --port 5174 --host"
+  }
+}
