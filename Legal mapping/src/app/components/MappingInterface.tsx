@@ -1,8 +1,8 @@
-import { Check, AlertCircle, ArrowRight, Edit2, Plus, Trash2, Settings } from 'lucide-react';
+import { Check, AlertCircle, ArrowRight, Edit2, Plus, Trash2, Settings, Lock, Unlock } from 'lucide-react';
 import { HeaderMapping, TARGET_HEADERS } from '../utils/headerMatcher';
 import { useState } from 'react';
 import { ConsolidationToggle } from './ConsolidationToggle';
-
+ 
 interface MappingInterfaceProps {
   mappings: HeaderMapping[];
   onMappingChange: (index: number, newTarget: string | null) => void;
@@ -22,7 +22,7 @@ interface MappingInterfaceProps {
   customTargetHeaders?: string[];
   deletedTargetHeaders?: string[];
 }
-
+ 
 export function MappingInterface({
   mappings,
   onMappingChange,
@@ -45,6 +45,13 @@ export function MappingInterface({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
   const [showManageColumns, setShowManageColumns] = useState(false);
+  const [unfrozenIndices, setUnfrozenIndices] = useState<Set<number>>(new Set());
+ 
+  const isFrozen = (index: number) => {
+    const mapping = mappings[index];
+    // Freeze if high or medium confidence, has a target selected, and not manually unfrozen
+    return (mapping.confidence >= 0.5) && mapping.targetHeader && !unfrozenIndices.has(index);
+  };
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.8) return 'text-green-600 bg-green-50';
@@ -62,6 +69,16 @@ export function MappingInterface({
   const handleStartEdit = (index: number, currentValue: string) => {
     setEditingIndex(index);
     setEditValue(currentValue);
+  };
+ 
+  const handlePenClick = (index: number, currentValue: string) => {
+    if (isFrozen(index)) {
+      const newUnfrozen = new Set(unfrozenIndices);
+      newUnfrozen.add(index);
+      setUnfrozenIndices(newUnfrozen);
+    } else {
+      handleStartEdit(index, currentValue);
+    }
   };
 
   const handleSaveEdit = (index: number) => {
@@ -115,103 +132,126 @@ export function MappingInterface({
         </div>
 
         <div className="space-y-1.5">
-          {mappings.map((mapping, index) => (
-            <div
-              key={index}
-              className="group flex items-center gap-3 p-2 bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 dark:from-gray-800/50 dark:to-blue-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 rounded-lg transition-all duration-300 border border-gray-100 dark:border-gray-700/50 hover:border-blue-200 dark:hover:border-blue-700/50 hover:shadow-sm"
-            >
-              {/* Source Header */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Src</span>
-                  <div className="flex-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md font-medium text-gray-800 dark:text-gray-200 shadow-sm truncate text-sm" title={mapping.sourceHeader}>
-                    {mapping.sourceHeader}
+          {mappings.map((mapping, index) => {
+            const frozen = isFrozen(index);
+            return (
+              <div
+                key={index}
+                className={`group flex items-center gap-3 p-2 rounded-lg transition-all duration-300 border shadow-sm ${
+                  frozen 
+                  ? 'bg-gray-100/50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800 opacity-90' 
+                  : 'bg-gradient-to-r from-gray-50 to-blue-50/30 hover:from-blue-50 hover:to-purple-50/30 dark:from-gray-800/50 dark:to-blue-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 border-gray-100 dark:border-gray-700/50 hover:border-blue-200 dark:hover:border-blue-700/50'
+                }`}
+              >
+                {/* Source Header */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Src</span>
+                    <div className="flex-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md font-medium text-gray-800 dark:text-gray-200 shadow-sm truncate text-sm" title={mapping.sourceHeader}>
+                      {mapping.sourceHeader}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Arrow */}
-              <div className="flex-shrink-0">
-                <ArrowRight className="w-4 h-4 text-blue-400 dark:text-blue-500 group-hover:text-purple-500 transition-colors" />
-              </div>
-
-              {/* Target Header Dropdown or Input */}
-              <div className="flex-[1.2] min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Dst</span>
-                  {editingIndex === index ? (
-                    <div className="flex-1 flex gap-1">
-                      <input
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEdit(index);
-                          if (e.key === 'Escape') handleCancelEdit();
-                        }}
-                        className="flex-1 px-3 py-1 bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 rounded-md focus:outline-none shadow-sm dark:text-gray-100 text-sm"
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => handleSaveEdit(index)}
-                        className="px-2 py-1 bg-blue-600 text-white rounded-md text-xs font-medium"
-                      >
-                        Save
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex gap-1 items-center">
-                      <select
-                        value={mapping.targetHeader || ''}
-                        onChange={(e) =>
-                          onMappingChange(
-                            index,
-                            e.target.value === '' ? null : e.target.value
-                          )
-                        }
-                        className="flex-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all shadow-sm font-medium dark:text-gray-100 text-sm"
-                      >
-                        <option value="">-- Skip --</option>
-                        {filteredHeaders.map((header, headerIdx) => (
-                          <option key={`${header}-${headerIdx}`} value={header}>
-                            {header}
-                          </option>
-                        ))}
-                      </select>
-                      {mapping.targetHeader && (
+ 
+                {/* Arrow */}
+                <div className="flex-shrink-0">
+                  <ArrowRight className="w-4 h-4 text-blue-400 dark:text-blue-500 group-hover:text-purple-500 transition-colors" />
+                </div>
+ 
+                {/* Target Header Dropdown or Input */}
+                <div className="flex-[1.2] min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Dst</span>
+                    {editingIndex === index ? (
+                      <div className="flex-1 flex gap-1">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit(index);
+                            if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                          className="flex-1 px-3 py-1 bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 rounded-md focus:outline-none shadow-sm dark:text-gray-100 text-sm"
+                          autoFocus
+                        />
                         <button
-                          onClick={() =>
-                            handleStartEdit(index, mapping.targetHeader!)
-                          }
-                          className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"
-                          title="Rename"
+                          onClick={() => handleSaveEdit(index)}
+                          className="px-2 py-1 bg-blue-600 text-white rounded-md text-xs font-medium"
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
+                          Save
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex gap-1 items-center">
+                        <div className="relative flex-1">
+                          <select
+                            value={mapping.targetHeader || ''}
+                            disabled={frozen}
+                            onChange={(e) =>
+                              onMappingChange(
+                                index,
+                                e.target.value === '' ? null : e.target.value
+                              )
+                            }
+                            className={`w-full px-3 py-1.5 bg-white dark:bg-gray-800 border rounded-md transition-all shadow-sm font-medium text-sm appearance-none pr-8 ${
+                              frozen 
+                              ? 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' 
+                              : 'border-gray-200 dark:border-gray-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 dark:text-gray-100'
+                            }`}
+                          >
+                            <option value="">-- Skip --</option>
+                            {filteredHeaders.map((header, headerIdx) => (
+                              <option key={`${header}-${headerIdx}`} value={header}>
+                                {header}
+                              </option>
+                            ))}
+                          </select>
+                          {frozen && (
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                              <Lock className="w-3 h-3" />
+                            </div>
+                          )}
+                        </div>
+                        {mapping.targetHeader && (
+                          <button
+                            onClick={() =>
+                              handlePenClick(index, mapping.targetHeader!)
+                            }
+                            className={`p-1.5 transition-colors rounded-md ${
+                              frozen 
+                              ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20' 
+                              : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                            }`}
+                            title={frozen ? "Unfreeze column to change mapping" : "Rename target header"}
+                          >
+                            {frozen ? <Unlock className="w-3.5 h-3.5 italic" /> : <Edit2 className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+ 
+                {/* Confidence Badge */}
+                <div className="flex-shrink-0 w-20 flex justify-end">
+                  {mapping.confidence > 0 ? (
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getConfidenceColor(
+                        mapping.confidence
+                      )}`}
+                    >
+                      {getConfidenceLabel(mapping.confidence)}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-400 border border-gray-200 dark:border-gray-600">
+                      Skip
+                    </span>
                   )}
                 </div>
               </div>
-
-              {/* Confidence Badge */}
-              <div className="flex-shrink-0 w-20 flex justify-end">
-                {mapping.confidence > 0 ? (
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getConfidenceColor(
-                      mapping.confidence
-                    )}`}
-                  >
-                    {getConfidenceLabel(mapping.confidence)}
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-400 border border-gray-200 dark:border-gray-600">
-                    Skip
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

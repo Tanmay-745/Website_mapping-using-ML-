@@ -4,15 +4,17 @@ import { AppTab } from '../App';
 interface HeaderProps {
     activeTab: AppTab;
     onTabChange: (tab: AppTab) => void;
+    userRole?: 'admin' | 'lender';
 }
 
-export function Header({ activeTab, onTabChange }: HeaderProps) {
-    const tabs: { id: AppTab; label: string; icon: any }[] = [
-        { id: 'themes', label: 'THEMES', icon: LayoutTemplate },
-        { id: 'advocates', label: 'ADVOCATES', icon: Briefcase },
-        { id: 'digital', label: 'DIGITAL', icon: Mail },
-        { id: 'physical', label: 'PHYSICAL', icon: Printer },
-    ];
+export function Header({ activeTab, onTabChange, userRole = 'admin' }: HeaderProps) {
+    const isAdmin = userRole === 'admin';
+    const tabs = [
+        { id: 'themes', label: 'THEMES', icon: LayoutTemplate, show: true },
+        { id: 'advocates', label: 'ADVOCATES', icon: Briefcase, show: isAdmin },
+        { id: 'digital', label: 'DIGITAL', icon: Mail, show: isAdmin },
+        { id: 'physical', label: 'PHYSICAL', icon: Printer, show: isAdmin },
+    ].filter(t => t.show);
 
     return (
         <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
@@ -32,7 +34,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => onTabChange(tab.id)}
+                                    onClick={() => onTabChange(tab.id as AppTab)}
                                     className={`relative px-6 h-20 flex items-center text-sm font-semibold tracking-wide transition-all duration-200 ${
                                         activeTab === tab.id
                                             ? 'text-blue-600 dark:text-blue-400'
@@ -49,17 +51,19 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => onTabChange('lenders' as AppTab)}
-                            className={`p-2.5 rounded-xl transition-all duration-200 ${
-                                activeTab === 'lenders' 
-                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 shadow-sm' 
-                                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'
-                            }`}
-                            title="System Settings"
-                        >
-                            <Settings className={`w-5 h-5 ${activeTab === 'lenders' ? 'animate-spin-slow' : ''}`} />
-                        </button>
+                        {isAdmin && (
+                            <button 
+                                onClick={() => onTabChange('lenders' as AppTab)}
+                                className={`p-2.5 rounded-xl transition-all duration-200 ${
+                                    activeTab === 'lenders' 
+                                        ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 shadow-sm' 
+                                        : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                }`}
+                                title="System Settings"
+                            >
+                                <Settings className={`w-5 h-5 ${activeTab === 'lenders' ? 'animate-spin-slow' : ''}`} />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

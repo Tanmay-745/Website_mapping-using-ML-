@@ -65,7 +65,13 @@ export interface Theme {
   sampleData?: Record<string, string>[];
 }
 
+interface UserContext {
+  role: 'admin' | 'lender';
+  lenderName?: string;
+}
+
 function App() {
+  const [userContext, setUserContext] = useState<UserContext>({ role: 'admin' });
   const [activeTab, setActiveTab] = useState<AppTab>("themes");
   const [themes, setThemes] = useState<Theme[]>([]);
   const [isAddingTheme, setIsAddingTheme] = useState(false);
@@ -97,18 +103,37 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handleThemeChange = (event: MessageEvent) => {
+    const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'THEME_CHANGE') {
         if (event.data.isDark) {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
         }
+      } else if (event.data?.type === 'USER_CONTEXT') {
+        setUserContext({
+          role: event.data.role,
+          lenderName: event.data.lenderName
+        });
+        
+        // If lender, restrict to themes tab
+        if (event.data.role === 'lender') {
+          setActiveTab('themes');
+        }
       }
     };
-    window.addEventListener('message', handleThemeChange);
-    return () => window.removeEventListener('message', handleThemeChange);
+    window.addEventListener('message', handleMessage);
+    
+    // Request context from parent in case it was already sent
+    window.parent.postMessage({ type: 'GET_USER_CONTEXT' }, '*');
+    
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  // Filter themes if user is a lender
+  const displayThemes = userContext.role === 'lender' && userContext.lenderName
+    ? themes.filter(t => t.lender === userContext.lenderName)
+    : themes;
 
   const handleSaveTemplateToTheme = (tpl: { language: string, content: string }) => {
     if (!editingTemplateData?.id) return;
@@ -148,12 +173,13 @@ function App() {
       <Header 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
+        userRole={userContext.role}
       />
 
       <main className="max-w-[1600px] mx-auto px-6 py-4">
         {activeTab === "themes" && (
           <ThemesDashboard 
-            themes={themes} 
+            themes={displayThemes} 
             onEditTheme={(theme) => {
               setEditingTheme(theme);
               setIsAddingTheme(true);

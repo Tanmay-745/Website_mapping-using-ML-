@@ -29,7 +29,7 @@ try {
 
 const app = express();
 const PORT = 54321;
-const ML_BACKEND_PORT = 8001;
+const ML_BACKEND_PORT = 8003;
 const TRANSLATOR_PORT = 8000;
 
 app.use(cors());

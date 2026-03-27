@@ -101,6 +101,7 @@ interface BarcodeTableProps {
   onResetBarcode: (id: string) => void
   onResetComplete: (id: string) => void
   onCancelReset: (id: string) => void
+  userRole?: 'admin' | 'lender'
 }
 
 export function BarcodeTable({
@@ -112,6 +113,7 @@ export function BarcodeTable({
   onResetBarcode,
   onResetComplete,
   onCancelReset,
+  userRole = 'admin',
 }: BarcodeTableProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all")
@@ -393,21 +395,23 @@ export function BarcodeTable({
                         <XCircle className="h-4 w-4" />
                       </Button>
                     </div>
-                  ) : barcode.isUsed ? (
-                    <button
-                      type="button"
-                      onClick={() => onResetBarcode(barcode.id)}
-                      className="inline-flex items-center"
-                    >
-                      <Badge
-                        variant="secondary"
-                        className="bg-muted text-muted-foreground gap-1 cursor-pointer hover:bg-muted/80 transition-colors"
+                    ) : (barcode.isUsed && userRole === 'admin') ? (
+                      <button
+                        type="button"
+                        onClick={() => onResetBarcode(barcode.id)}
+                        className="inline-flex items-center"
                       >
-                        <RotateCcw className="h-3 w-3" />
-                        Reset
-                      </Badge>
-                    </button>
-                  ) : (
+                        <Badge
+                          variant="secondary"
+                          className="bg-muted text-muted-foreground gap-1 cursor-pointer hover:bg-muted/80 transition-colors"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          Reset
+                        </Badge>
+                      </button>
+                    ) : barcode.isUsed ? (
+                       <Badge variant="outline" className="opacity-70">Used</Badge>
+                    ) : (
                     <button
                       type="button"
                       onClick={() => handleSingleAvailableClick(barcode.id)}

@@ -21,7 +21,13 @@ import { toast } from "sonner"
 // Initial state now empty, fetched from API
 const initialBarcodes: BarcodeItem[] = []
 
+interface UserContext {
+  role: 'admin' | 'lender';
+  lenderName?: string;
+}
+
 export default function BarcodePage() {
+  const [userContext, setUserContext] = React.useState<UserContext>({ role: 'admin' })
   const [barcodes, setBarcodes] = React.useState<BarcodeItem[]>([])
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false)
@@ -43,6 +49,11 @@ export default function BarcodePage() {
     const handleMessage = (event: MessageEvent) => {
       if ((event.data?.type === 'APP_RELOAD' || event.data?.type === 'RELOAD_APP') && event.data?.appId === 'barcode') {
         fetchBarcodes()
+      } else if (event.data?.type === 'USER_CONTEXT') {
+        setUserContext({
+          role: event.data.role,
+          lenderName: event.data.lenderName
+        });
       }
     }
 
@@ -56,6 +67,10 @@ export default function BarcodePage() {
     };
 
     window.addEventListener('message', handleMessage);
+    
+    // Request context from parent in case it was already sent
+    window.parent.postMessage({ type: 'GET_USER_CONTEXT' }, '*');
+
     return () => {
       window.removeEventListener('message', handleMessage);
       bc.close();
@@ -159,15 +174,22 @@ export default function BarcodePage() {
     }
   }
 
+  const displayBarcodes = React.useMemo(() => {
+    if (userContext.role === 'lender' && userContext.lenderName) {
+      return barcodes.filter(b => b.bankName === userContext.lenderName);
+    }
+    return barcodes;
+  }, [barcodes, userContext]);
+
   const stats = React.useMemo(() => {
-    const total = barcodes.length
-    const used = barcodes.filter((b) => b.isUsed).length
+    const total = displayBarcodes.length
+    const used = displayBarcodes.filter((b) => b.isUsed).length
     const available = total - used
     return { total, used, available }
-  }, [barcodes])
+  }, [displayBarcodes])
 
   const usedLendersStats = React.useMemo(() => {
-    const usedBarcodes = barcodes.filter(b => b.isUsed);
+    const usedBarcodes = displayBarcodes.filter(b => b.isUsed);
     const lenderMap = new Map<string, number>();
 
     usedBarcodes.forEach(b => {
@@ -178,7 +200,7 @@ export default function BarcodePage() {
     return Array.from(lenderMap.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count); // Sort by count descending
-  }, [barcodes]);
+  }, [displayBarcodes]);
 
   const handleMarkAsUsed = async (count: number, lenderName: string, lan: string, bankName: string) => {
     // Get all available (unused) barcodes
@@ -365,24 +387,26 @@ export default function BarcodePage() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col gap-6">
-          <div className="flex justify-end">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              ref={fileInputRef}
-              className="hidden"
-              id="csv-upload"
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-700"
-              variant="outline"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload CSV
-            </Button>
-          </div>
+          {userContext.role === 'admin' && (
+            <div className="flex justify-end">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+                className="hidden"
+                id="csv-upload"
+              />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-700"
+                variant="outline"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload CSV
+              </Button>
+            </div>
+          )}
 
           <BarcodeStats
             total={stats.total}
@@ -402,7 +426,7 @@ export default function BarcodePage() {
           </div>
 
           <BarcodeTable
-            barcodes={barcodes}
+            barcodes={displayBarcodes}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
             onMarkAsUsed={handleMarkAsUsed}
@@ -410,6 +434,7 @@ export default function BarcodePage() {
             onResetBarcode={handleResetBarcode}
             onResetComplete={handleResetComplete}
             onCancelReset={handleCancelReset}
+            userRole={userContext.role}
           />
         </div>
       </main>

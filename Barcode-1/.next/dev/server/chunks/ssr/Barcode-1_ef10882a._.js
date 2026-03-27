@@ -839,7 +839,7 @@ function ResetCountdown({ resetAt, onComplete }) {
         columnNumber: 5
     }, this);
 }
-function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, onMarkSingleAsUsed, onResetBarcode, onResetComplete, onCancelReset }) {
+function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, onMarkSingleAsUsed, onResetBarcode, onResetComplete, onCancelReset, userRole = 'admin' }) {
     const [searchQuery, setSearchQuery] = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"]("");
     const [statusFilter, setStatusFilter] = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"]("all");
     const [isDialogOpen, setIsDialogOpen] = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"](false);
@@ -997,7 +997,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 270,
+                                        lineNumber: 272,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1007,13 +1007,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         className: "pl-9 bg-secondary dark:bg-gray-800 border-border dark:border-gray-700 dark:text-white"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 271,
+                                        lineNumber: 273,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 269,
+                                lineNumber: 271,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -1027,20 +1027,20 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 className: "h-4 w-4 mr-2"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 283,
+                                                lineNumber: 285,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {
                                                 placeholder: "Status"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 284,
+                                                lineNumber: 286,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 282,
+                                        lineNumber: 284,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1050,7 +1050,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 children: "All Status"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 287,
+                                                lineNumber: 289,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1058,7 +1058,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 children: "Available"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 288,
+                                                lineNumber: 290,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1066,25 +1066,25 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 children: "Used"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 289,
+                                                lineNumber: 291,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 286,
+                                        lineNumber: 288,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 278,
+                                lineNumber: 280,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                        lineNumber: 268,
+                        lineNumber: 270,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1098,7 +1098,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 295,
+                                lineNumber: 297,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1113,26 +1113,26 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 307,
+                                        lineNumber: 309,
                                         columnNumber: 13
                                     }, this),
                                     "Mark as Used"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 299,
+                                lineNumber: 301,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                        lineNumber: 293,
+                        lineNumber: 295,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                lineNumber: 267,
+                lineNumber: 269,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1152,12 +1152,12 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             "data-state": someUnusedSelected ? "indeterminate" : allUnusedSelected ? "checked" : "unchecked"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 318,
+                                            lineNumber: 320,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 317,
+                                        lineNumber: 319,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -1165,7 +1165,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         children: "Barcode"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 331,
+                                        lineNumber: 333,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -1173,7 +1173,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         children: "Lender Name"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 332,
+                                        lineNumber: 334,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -1181,7 +1181,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         children: "Customer Phone Number"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 333,
+                                        lineNumber: 335,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -1189,7 +1189,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         children: "LAN"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 334,
+                                        lineNumber: 336,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -1197,7 +1197,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         children: "Date"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 335,
+                                        lineNumber: 337,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -1205,18 +1205,18 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         children: "Status"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 336,
+                                        lineNumber: 338,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 316,
+                                lineNumber: 318,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 315,
+                            lineNumber: 317,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableBody"], {
@@ -1233,12 +1233,12 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                     "aria-label": `Select barcode ${barcode.code}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                    lineNumber: 352,
+                                                    lineNumber: 354,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 351,
+                                                lineNumber: 353,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -1249,7 +1249,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                             className: "h-4 w-4 text-muted-foreground dark:text-gray-400"
                                                         }, void 0, false, {
                                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                            lineNumber: 363,
+                                                            lineNumber: 365,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("code", {
@@ -1257,18 +1257,18 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                             children: barcode.code
                                                         }, void 0, false, {
                                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                            lineNumber: 364,
+                                                            lineNumber: 366,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                    lineNumber: 362,
+                                                    lineNumber: 364,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 361,
+                                                lineNumber: 363,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -1276,7 +1276,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 children: barcode.isUsed ? barcode.bankName || "-" : "-"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 367,
+                                                lineNumber: 369,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -1284,7 +1284,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 children: barcode.isUsed ? barcode.lenderName : "-"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 370,
+                                                lineNumber: 372,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -1292,7 +1292,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 children: barcode.isUsed ? barcode.lan || "-" : "-"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 373,
+                                                lineNumber: 375,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -1300,7 +1300,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                 children: barcode.isUsed ? barcode.usedAt || barcode.createdAt : "-"
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 376,
+                                                lineNumber: 378,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -1313,7 +1313,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                             onComplete: ()=>onResetComplete(barcode.id)
                                                         }, void 0, false, {
                                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                            lineNumber: 382,
+                                                            lineNumber: 384,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1326,20 +1326,20 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                                 className: "h-4 w-4"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                                lineNumber: 393,
+                                                                lineNumber: 395,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                            lineNumber: 386,
+                                                            lineNumber: 388,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                    lineNumber: 381,
+                                                    lineNumber: 383,
                                                     columnNumber: 21
-                                                }, this) : barcode.isUsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                }, this) : barcode.isUsed && userRole === 'admin' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     type: "button",
                                                     onClick: ()=>onResetBarcode(barcode.id),
                                                     className: "inline-flex items-center",
@@ -1351,20 +1351,28 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                                 className: "h-3 w-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                                lineNumber: 406,
-                                                                columnNumber: 25
+                                                                lineNumber: 408,
+                                                                columnNumber: 27
                                                             }, this),
                                                             "Reset"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                        lineNumber: 402,
-                                                        columnNumber: 23
+                                                        lineNumber: 404,
+                                                        columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                    lineNumber: 397,
-                                                    columnNumber: 21
+                                                    lineNumber: 399,
+                                                    columnNumber: 23
+                                                }, this) : barcode.isUsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
+                                                    variant: "outline",
+                                                    className: "opacity-70",
+                                                    children: "Used"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/Barcode-1/components/barcode-table.tsx",
+                                                    lineNumber: 413,
+                                                    columnNumber: 24
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     type: "button",
                                                     onClick: ()=>handleSingleAvailableClick(barcode.id),
@@ -1376,30 +1384,30 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                                                 className: "h-3 w-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                                lineNumber: 417,
+                                                                lineNumber: 421,
                                                                 columnNumber: 25
                                                             }, this),
                                                             "Available"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                        lineNumber: 416,
+                                                        lineNumber: 420,
                                                         columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                    lineNumber: 411,
+                                                    lineNumber: 415,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                                lineNumber: 379,
+                                                lineNumber: 381,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, barcode.id, true, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 341,
+                                        lineNumber: 343,
                                         columnNumber: 15
                                     }, this)),
                                 filteredBarcodes.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableRow"], {
@@ -1409,29 +1417,29 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                         children: "No barcodes found."
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                        lineNumber: 427,
+                                        lineNumber: 431,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 426,
+                                    lineNumber: 430,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 339,
+                            lineNumber: 341,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                    lineNumber: 314,
+                    lineNumber: 316,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                lineNumber: 313,
+                lineNumber: 315,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1451,7 +1459,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                         ]
                     }, void 0, true, {
                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                        lineNumber: 440,
+                        lineNumber: 444,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1466,7 +1474,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                 children: "Previous"
                             }, void 0, false, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 445,
+                                lineNumber: 449,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1479,7 +1487,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 454,
+                                lineNumber: 458,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1491,19 +1499,19 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                 children: "Next"
                             }, void 0, false, {
                                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                lineNumber: 457,
+                                lineNumber: 461,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                        lineNumber: 444,
+                        lineNumber: 448,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                lineNumber: 439,
+                lineNumber: 443,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -1518,7 +1526,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                     children: "Mark Barcodes as Used"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 472,
+                                    lineNumber: 476,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
@@ -1529,13 +1537,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 473,
+                                    lineNumber: 477,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 471,
+                            lineNumber: 475,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1549,7 +1557,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             children: "Number of barcodes"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 480,
+                                            lineNumber: 484,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1563,13 +1571,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             className: "bg-secondary border-border"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 481,
+                                            lineNumber: 485,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 479,
+                                    lineNumber: 483,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1580,7 +1588,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             children: "Lender Name"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 493,
+                                            lineNumber: 497,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1592,13 +1600,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             className: "bg-secondary border-border"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 494,
+                                            lineNumber: 498,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 492,
+                                    lineNumber: 496,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1609,7 +1617,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             children: "Customer Phone Number"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 504,
+                                            lineNumber: 508,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1621,13 +1629,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             className: "bg-secondary border-border"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 505,
+                                            lineNumber: 509,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 503,
+                                    lineNumber: 507,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1638,7 +1646,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             children: "LAN (Loan Account Number)"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 515,
+                                            lineNumber: 519,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1650,13 +1658,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             className: "bg-secondary border-border"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 516,
+                                            lineNumber: 520,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 514,
+                                    lineNumber: 518,
                                     columnNumber: 13
                                 }, this),
                                 markCount && Number(markCount) > unusedBarcodes.length && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1668,13 +1676,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 526,
+                                    lineNumber: 530,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 478,
+                            lineNumber: 482,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -1692,7 +1700,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 532,
+                                    lineNumber: 536,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1704,31 +1712,31 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 555,
+                                            lineNumber: 559,
                                             columnNumber: 15
                                         }, this),
                                         "Download & Mark Used"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 544,
+                                    lineNumber: 548,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 531,
+                            lineNumber: 535,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                    lineNumber: 470,
+                    lineNumber: 474,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                lineNumber: 469,
+                lineNumber: 473,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -1743,20 +1751,20 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                     children: "Assign Customer Phone Number"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 565,
+                                    lineNumber: 569,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
                                     children: "Enter the customer phone number for this barcode before marking it as used."
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 566,
+                                    lineNumber: 570,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 564,
+                            lineNumber: 568,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1770,7 +1778,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             children: "Lender Name"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 572,
+                                            lineNumber: 576,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1783,13 +1791,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             autoFocus: true
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 573,
+                                            lineNumber: 577,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 571,
+                                    lineNumber: 575,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1800,7 +1808,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             children: "Customer Phone Number"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 584,
+                                            lineNumber: 588,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1812,13 +1820,13 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             className: "bg-secondary border-border"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 585,
+                                            lineNumber: 589,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 583,
+                                    lineNumber: 587,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1829,7 +1837,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             children: "LAN (Loan Account Number)"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 595,
+                                            lineNumber: 599,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1841,19 +1849,19 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                             className: "bg-secondary border-border"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                            lineNumber: 596,
+                                            lineNumber: 600,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 594,
+                                    lineNumber: 598,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 570,
+                            lineNumber: 574,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -1871,7 +1879,7 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 607,
+                                    lineNumber: 611,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1880,30 +1888,30 @@ function BarcodeTable({ barcodes, selectedIds, onSelectionChange, onMarkAsUsed, 
                                     children: "Confirm"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                                    lineNumber: 619,
+                                    lineNumber: 623,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                            lineNumber: 606,
+                            lineNumber: 610,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                    lineNumber: 563,
+                    lineNumber: 567,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-                lineNumber: 562,
+                lineNumber: 566,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/Barcode-1/components/barcode-table.tsx",
-        lineNumber: 266,
+        lineNumber: 268,
         columnNumber: 5
     }, this);
 }
@@ -2368,6 +2376,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules
 // Initial state now empty, fetched from API
 const initialBarcodes = [];
 function BarcodePage() {
+    const [userContext, setUserContext] = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"]({
+        role: 'admin'
+    });
     const [barcodes, setBarcodes] = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"]([]);
     const [selectedIds, setSelectedIds] = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"](new Set());
     const [isUploadDialogOpen, setIsUploadDialogOpen] = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"](false);
@@ -2387,6 +2398,11 @@ function BarcodePage() {
         const handleMessage = (event)=>{
             if ((event.data?.type === 'APP_RELOAD' || event.data?.type === 'RELOAD_APP') && event.data?.appId === 'barcode') {
                 fetchBarcodes();
+            } else if (event.data?.type === 'USER_CONTEXT') {
+                setUserContext({
+                    role: event.data.role,
+                    lenderName: event.data.lenderName
+                });
             }
         };
         // 2. Listen for BroadcastChannel (for cross-tab sync)
@@ -2398,6 +2414,10 @@ function BarcodePage() {
             }
         };
         window.addEventListener('message', handleMessage);
+        // Request context from parent in case it was already sent
+        window.parent.postMessage({
+            type: 'GET_USER_CONTEXT'
+        }, '*');
         return ()=>{
             window.removeEventListener('message', handleMessage);
             bc.close();
@@ -2494,9 +2514,18 @@ function BarcodePage() {
             setIsUploadDialogOpen(false);
         }
     };
+    const displayBarcodes = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"](()=>{
+        if (userContext.role === 'lender' && userContext.lenderName) {
+            return barcodes.filter((b)=>b.bankName === userContext.lenderName);
+        }
+        return barcodes;
+    }, [
+        barcodes,
+        userContext
+    ]);
     const stats = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"](()=>{
-        const total = barcodes.length;
-        const used = barcodes.filter((b)=>b.isUsed).length;
+        const total = displayBarcodes.length;
+        const used = displayBarcodes.filter((b)=>b.isUsed).length;
         const available = total - used;
         return {
             total,
@@ -2504,10 +2533,10 @@ function BarcodePage() {
             available
         };
     }, [
-        barcodes
+        displayBarcodes
     ]);
     const usedLendersStats = __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"](()=>{
-        const usedBarcodes = barcodes.filter((b)=>b.isUsed);
+        const usedBarcodes = displayBarcodes.filter((b)=>b.isUsed);
         const lenderMap = new Map();
         usedBarcodes.forEach((b)=>{
             const lenderName = b.bankName && b.bankName.trim() !== "" ? b.bankName : "Unknown Lender";
@@ -2518,7 +2547,7 @@ function BarcodePage() {
                 count
             })).sort((a, b)=>b.count - a.count); // Sort by count descending
     }, [
-        barcodes
+        displayBarcodes
     ]);
     const handleMarkAsUsed = async (count, lenderName, lan, bankName)=>{
         // Get all available (unused) barcodes
@@ -2703,7 +2732,7 @@ function BarcodePage() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$header$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Header"], {}, void 0, false, {
                 fileName: "[project]/Barcode-1/app/page.tsx",
-                lineNumber: 364,
+                lineNumber: 386,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -2711,7 +2740,7 @@ function BarcodePage() {
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "flex flex-col gap-6",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        userContext.role === 'admin' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "flex justify-end",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2723,8 +2752,8 @@ function BarcodePage() {
                                     id: "csv-upload"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 369,
-                                    columnNumber: 13
+                                    lineNumber: 392,
+                                    columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
                                     onClick: ()=>fileInputRef.current?.click(),
@@ -2735,21 +2764,21 @@ function BarcodePage() {
                                             className: "h-4 w-4 mr-2"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 382,
-                                            columnNumber: 15
+                                            lineNumber: 405,
+                                            columnNumber: 17
                                         }, this),
                                         "Upload CSV"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 377,
-                                    columnNumber: 13
+                                    lineNumber: 400,
+                                    columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 368,
-                            columnNumber: 11
+                            lineNumber: 391,
+                            columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$barcode$2d$stats$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["BarcodeStats"], {
                             total: stats.total,
@@ -2758,7 +2787,7 @@ function BarcodePage() {
                             onUsedClick: ()=>setIsUsedLendersDialogOpen(true)
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 387,
+                            lineNumber: 411,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2769,7 +2798,7 @@ function BarcodePage() {
                                     children: "Barcode Inventory"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 395,
+                                    lineNumber: 419,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2777,38 +2806,39 @@ function BarcodePage() {
                                     children: "Select unused barcodes to mark them as used. Used barcodes cannot be selected."
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 398,
+                                    lineNumber: 422,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 394,
+                            lineNumber: 418,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$barcode$2d$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["BarcodeTable"], {
-                            barcodes: barcodes,
+                            barcodes: displayBarcodes,
                             selectedIds: selectedIds,
                             onSelectionChange: setSelectedIds,
                             onMarkAsUsed: handleMarkAsUsed,
                             onMarkSingleAsUsed: handleMarkSingleAsUsed,
                             onResetBarcode: handleResetBarcode,
                             onResetComplete: handleResetComplete,
-                            onCancelReset: handleCancelReset
+                            onCancelReset: handleCancelReset,
+                            userRole: userContext.role
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 404,
+                            lineNumber: 428,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/app/page.tsx",
-                    lineNumber: 367,
+                    lineNumber: 389,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/app/page.tsx",
-                lineNumber: 366,
+                lineNumber: 388,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -2823,20 +2853,20 @@ function BarcodePage() {
                                     children: "Upload Barcodes"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 420,
+                                    lineNumber: 445,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
                                     children: "Preview the barcodes to be imported from your CSV file."
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 421,
+                                    lineNumber: 446,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 419,
+                            lineNumber: 444,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2846,7 +2876,7 @@ function BarcodePage() {
                                 children: 'No valid barcodes found in the CSV file. Make sure it has a column named "Barcode" or "Code".'
                             }, void 0, false, {
                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                lineNumber: 427,
+                                lineNumber: 452,
                                 columnNumber: 15
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
                                 children: [
@@ -2866,7 +2896,7 @@ function BarcodePage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                        lineNumber: 435,
+                                                        lineNumber: 460,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
@@ -2876,19 +2906,19 @@ function BarcodePage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                        lineNumber: 436,
+                                                        lineNumber: 461,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                lineNumber: 434,
+                                                lineNumber: 459,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                        lineNumber: 432,
+                                        lineNumber: 457,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2905,7 +2935,7 @@ function BarcodePage() {
                                                                 children: "Barcode"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                lineNumber: 443,
+                                                                lineNumber: 468,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2913,7 +2943,7 @@ function BarcodePage() {
                                                                 children: "Lender Name"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                lineNumber: 444,
+                                                                lineNumber: 469,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2921,7 +2951,7 @@ function BarcodePage() {
                                                                 children: "Customer Phone Number"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                lineNumber: 445,
+                                                                lineNumber: 470,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2929,18 +2959,18 @@ function BarcodePage() {
                                                                 children: "Status"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                lineNumber: 446,
+                                                                lineNumber: 471,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                        lineNumber: 442,
+                                                        lineNumber: 467,
                                                         columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                                    lineNumber: 441,
+                                                    lineNumber: 466,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -2952,7 +2982,7 @@ function BarcodePage() {
                                                                     children: b.code
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                    lineNumber: 452,
+                                                                    lineNumber: 477,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2960,7 +2990,7 @@ function BarcodePage() {
                                                                     children: b.bankName || "-"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                    lineNumber: 453,
+                                                                    lineNumber: 478,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2968,7 +2998,7 @@ function BarcodePage() {
                                                                     children: b.lenderName || "-"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                    lineNumber: 454,
+                                                                    lineNumber: 479,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2978,41 +3008,41 @@ function BarcodePage() {
                                                                         children: b.isUsed ? "Used" : "Available"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                        lineNumber: 456,
+                                                                        lineNumber: 481,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                    lineNumber: 455,
+                                                                    lineNumber: 480,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, b.id, true, {
                                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                                            lineNumber: 451,
+                                                            lineNumber: 476,
                                                             columnNumber: 25
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                                    lineNumber: 449,
+                                                    lineNumber: 474,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 440,
+                                            lineNumber: 465,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                        lineNumber: 439,
+                                        lineNumber: 464,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true)
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 425,
+                            lineNumber: 450,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -3027,7 +3057,7 @@ function BarcodePage() {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 469,
+                                    lineNumber: 494,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -3040,24 +3070,24 @@ function BarcodePage() {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 478,
+                                    lineNumber: 503,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 468,
+                            lineNumber: 493,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/app/page.tsx",
-                    lineNumber: 418,
+                    lineNumber: 443,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/app/page.tsx",
-                lineNumber: 417,
+                lineNumber: 442,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -3072,20 +3102,20 @@ function BarcodePage() {
                                     children: "Used Barcodes by Lender"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 491,
+                                    lineNumber: 516,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
                                     children: "Breakdown of how many barcodes each lender has used."
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 492,
+                                    lineNumber: 517,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 490,
+                            lineNumber: 515,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3095,7 +3125,7 @@ function BarcodePage() {
                                 children: "No barcodes have been used yet."
                             }, void 0, false, {
                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                lineNumber: 498,
+                                lineNumber: 523,
                                 columnNumber: 15
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "max-h-64 overflow-y-auto rounded-lg border border-border dark:border-gray-700",
@@ -3111,7 +3141,7 @@ function BarcodePage() {
                                                         children: "Lender Name"
                                                     }, void 0, false, {
                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                        lineNumber: 504,
+                                                        lineNumber: 529,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -3119,18 +3149,18 @@ function BarcodePage() {
                                                         children: "Used Count"
                                                     }, void 0, false, {
                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                        lineNumber: 505,
+                                                        lineNumber: 530,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                lineNumber: 503,
+                                                lineNumber: 528,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 502,
+                                            lineNumber: 527,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -3149,18 +3179,18 @@ function BarcodePage() {
                                                                         className: "h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                        lineNumber: 521,
+                                                                        lineNumber: 546,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                lineNumber: 519,
+                                                                lineNumber: 544,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                                            lineNumber: 514,
+                                                            lineNumber: 539,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3173,7 +3203,7 @@ function BarcodePage() {
                                                                         children: lender.count.toLocaleString()
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                        lineNumber: 526,
+                                                                        lineNumber: 551,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -3189,12 +3219,12 @@ function BarcodePage() {
                                                                             className: "h-4 w-4"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                            lineNumber: 536,
+                                                                            lineNumber: 561,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                        lineNumber: 529,
+                                                                        lineNumber: 554,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -3207,50 +3237,50 @@ function BarcodePage() {
                                                                             className: "h-4 w-4"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                            lineNumber: 545,
+                                                                            lineNumber: 570,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                        lineNumber: 538,
+                                                                        lineNumber: 563,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                                lineNumber: 525,
+                                                                lineNumber: 550,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                                            lineNumber: 524,
+                                                            lineNumber: 549,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, lender.name, true, {
                                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                                    lineNumber: 510,
+                                                    lineNumber: 535,
                                                     columnNumber: 23
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 508,
+                                            lineNumber: 533,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 501,
+                                    lineNumber: 526,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                lineNumber: 500,
+                                lineNumber: 525,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 496,
+                            lineNumber: 521,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -3259,23 +3289,23 @@ function BarcodePage() {
                                 children: "Close"
                             }, void 0, false, {
                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                lineNumber: 557,
+                                lineNumber: 582,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 556,
+                            lineNumber: 581,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/app/page.tsx",
-                    lineNumber: 489,
+                    lineNumber: 514,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/app/page.tsx",
-                lineNumber: 488,
+                lineNumber: 513,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -3290,7 +3320,7 @@ function BarcodePage() {
                                     children: "Edit Lender Name"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 565,
+                                    lineNumber: 590,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
@@ -3303,13 +3333,13 @@ function BarcodePage() {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 566,
+                                    lineNumber: 591,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 564,
+                            lineNumber: 589,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3322,7 +3352,7 @@ function BarcodePage() {
                                         children: "New Lender Name"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                        lineNumber: 572,
+                                        lineNumber: 597,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -3334,18 +3364,18 @@ function BarcodePage() {
                                         className: "bg-secondary border-border"
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                        lineNumber: 573,
+                                        lineNumber: 598,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                lineNumber: 571,
+                                lineNumber: 596,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 570,
+                            lineNumber: 595,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -3357,7 +3387,7 @@ function BarcodePage() {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 584,
+                                    lineNumber: 609,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -3367,24 +3397,24 @@ function BarcodePage() {
                                     children: "Update All"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 585,
+                                    lineNumber: 610,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 583,
+                            lineNumber: 608,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/app/page.tsx",
-                    lineNumber: 563,
+                    lineNumber: 588,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/app/page.tsx",
-                lineNumber: 562,
+                lineNumber: 587,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -3403,7 +3433,7 @@ function BarcodePage() {
                                     children: "Reset All Barcodes"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 602,
+                                    lineNumber: 627,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
@@ -3417,18 +3447,18 @@ function BarcodePage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 604,
+                                            lineNumber: 629,
                                             columnNumber: 71
                                         }, this),
                                         "?",
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 605,
+                                            lineNumber: 630,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 605,
+                                            lineNumber: 630,
                                             columnNumber: 21
                                         }, this),
                                         "This will move ",
@@ -3438,19 +3468,19 @@ function BarcodePage() {
                                             children: "This action cannot be undone."
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 606,
+                                            lineNumber: 631,
                                             columnNumber: 136
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 603,
+                                    lineNumber: 628,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 601,
+                            lineNumber: 626,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3467,14 +3497,14 @@ function BarcodePage() {
                                                 children: usedLendersStats.find((l)=>l.name === lenderToReset)?.count || 0
                                             }, void 0, false, {
                                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                                lineNumber: 612,
+                                                lineNumber: 637,
                                                 columnNumber: 22
                                             }, this),
                                             " to confirm"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                        lineNumber: 611,
+                                        lineNumber: 636,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -3487,18 +3517,18 @@ function BarcodePage() {
                                         autoFocus: true
                                     }, void 0, false, {
                                         fileName: "[project]/Barcode-1/app/page.tsx",
-                                        lineNumber: 614,
+                                        lineNumber: 639,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Barcode-1/app/page.tsx",
-                                lineNumber: 610,
+                                lineNumber: 635,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 609,
+                            lineNumber: 634,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -3513,7 +3543,7 @@ function BarcodePage() {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 626,
+                                    lineNumber: 651,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Barcode$2d$1$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -3525,37 +3555,37 @@ function BarcodePage() {
                                             className: "h-4 w-4 mr-2"
                                         }, void 0, false, {
                                             fileName: "[project]/Barcode-1/app/page.tsx",
-                                            lineNumber: 635,
+                                            lineNumber: 660,
                                             columnNumber: 15
                                         }, this),
                                         "Yes, Reset All"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Barcode-1/app/page.tsx",
-                                    lineNumber: 630,
+                                    lineNumber: 655,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Barcode-1/app/page.tsx",
-                            lineNumber: 625,
+                            lineNumber: 650,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Barcode-1/app/page.tsx",
-                    lineNumber: 600,
+                    lineNumber: 625,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Barcode-1/app/page.tsx",
-                lineNumber: 596,
+                lineNumber: 621,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/Barcode-1/app/page.tsx",
-        lineNumber: 363,
+        lineNumber: 385,
         columnNumber: 5
     }, this);
 }
