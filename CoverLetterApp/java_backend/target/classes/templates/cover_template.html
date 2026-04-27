@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Envelope Print</title>
+    <style>
+        @page { size: 220mm 110mm; margin: 0; }
+        body { margin: 0; padding: 0; width: 220mm; height: 110mm; font-family: 'Segoe UI', Arial, sans-serif; background: #fff; }
+        .envelope { width: 100%; height: 100%; position: relative; box-sizing: border-box; page-break-after: always; overflow: hidden; }
+        .to-section { position: absolute; top: 48mm; left: 20mm; width: 100mm; font-size: 11pt; font-weight: bold; }
+        .from-section { position: absolute; bottom: 12mm; left: 115mm; width: 90mm; font-size: 11pt; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div th:each="env : ${envelopes}" class="envelope">
+        <div th:if="${logoDataUri != null and !logoDataUri.isEmpty()}" style="position:absolute; top: 10mm; left: 20mm;">
+            <img th:src="${logoDataUri}" alt="Header Logo" style="height: 30mm;" />
+        </div>
+        <div class="to-section">
+            To: <span th:text="${env.name}"></span> <br/>
+            Mobile No: <span th:text="${env.phone}"></span><br/>
+            <div style="font-size: 10pt; font-weight: normal;">
+                <b>Address:</b> <span th:text="${env.address}"></span>
+            </div>
+        </div>
+        <div style="position: absolute; bottom: 15mm; left: 20mm; width: 85mm;">
+             <!-- Barcode Image -->
+        </div>
+        <div class="from-section">
+            <div style="font-size: 10pt; font-weight: normal;">
+                <div><b>From:</b> <span th:text="${sender.from}"></span></div>
+                <div th:if="${sender.mobile != null}"><b>Mobile:</b> <span th:text="${sender.mobile}"></span></div>
+                <div th:if="${sender.address != null}"><b>Address:</b> <span th:text="${sender.address}"></span></div>
+            </div>
+        </div>
+    </div>
+    <div th:if="${#lists.isEmpty(envelopes)}" style="padding: 20px;">No envelope data available.</div>
+</body>
+</html>

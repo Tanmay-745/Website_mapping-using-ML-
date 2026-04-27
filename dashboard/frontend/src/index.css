@@ -1,0 +1,86 @@
+@import "tailwindcss";
+@import "./styles/theme.css";
+@import "tw-animate-css";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif !important;
+  }
+}
+
+/* Custom Scrollbar Styles - Premium & Minimalist */
+/* Hiding the track entirely to remove the "basal" (bar) strips from the UI */
+.custom-scrollbar::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.4); /* slate-300 with transparency */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6; /* blue-500 */
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155; /* slate-700 */
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa; /* blue-400 */
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Animations for 'Smooth' effect */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.shadow-glow {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Glassmorphism utility classes */
+.glass-effect {
+  @apply bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/40 dark:border-gray-700/40;
+}
