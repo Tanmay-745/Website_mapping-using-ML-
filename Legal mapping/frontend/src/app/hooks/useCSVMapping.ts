@@ -13,6 +13,29 @@ const getMLWorker = () => {
     return ML_WORKER;
 };
 
+const normalizeTemplateHeader = (value: unknown) =>
+    String(value ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+const mergeLenderTemplateStores = (
+    localTemplates: Record<string, Record<string, string>>,
+    serverTemplates: Record<string, Record<string, string>>
+) => {
+    const merged = { ...localTemplates };
+
+    Object.entries(serverTemplates).forEach(([lenderName, serverTemplate]) => {
+        merged[lenderName] = {
+            ...(localTemplates[lenderName] || {}),
+            ...serverTemplate,
+        };
+    });
+
+    return merged;
+};
+
 export function useCSVMapping() {
     const [parsedData, setParsedData] = useState<ParsedCSV | null>(null);
     const [mappings, setMappings] = useState<HeaderMapping[]>([]);
@@ -80,6 +103,7 @@ export function useCSVMapping() {
 
     const [activeLender, setActiveLender] = useState<string | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+    const [hasLoadedServerTemplates, setHasLoadedServerTemplates] = useState<boolean>(false);
 
     const [mlReady, setMlReady] = useState(false);
     const [mlProgress, setMlProgress] = useState<any>(null);
@@ -133,6 +157,8 @@ export function useCSVMapping() {
     }, [learnedMappings]);
 
     useEffect(() => {
+        if (!hasLoadedServerTemplates) return;
+
         const syncTemplates = async () => {
             try {
                 await fetch('/api/templates', {
@@ -150,24 +176,34 @@ export function useCSVMapping() {
             syncTemplates();
         }
         localStorage.setItem('csvMapping_lenderTemplates', JSON.stringify(lenderTemplates));
-    }, [lenderTemplates]);
+    }, [lenderTemplates, hasLoadedServerTemplates]);
 
     // Initial Load from Server
     useEffect(() => {
+        let cancelled = false;
+
         const loadFromServer = async () => {
             try {
                 const response = await fetch('/api/templates');
                 if (response.ok) {
                     const data = await response.json();
-                    if (data && Object.keys(data).length > 0) {
-                        setLenderTemplates(data);
+                    if (!cancelled && data && Object.keys(data).length > 0) {
+                        setLenderTemplates(prev => mergeLenderTemplateStores(prev, data));
                     }
                 }
             } catch (e) {
                 console.error("Failed to load templates from server", e);
+            } finally {
+                if (!cancelled) {
+                    setHasLoadedServerTemplates(true);
+                }
             }
         };
         loadFromServer();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     // Apply Lender Template manually
@@ -268,8 +304,8 @@ export function useCSVMapping() {
                 if (typeof rawName === 'string') {
                     // Split by " and ", " And ", " AND ", " / ", "/", "\"
                     // Use regex that handles variations of "and" with spaces, and slashes
-                    // Also handle & symbol if user wants, but stick to requested: "and", "/", "\"
-                    const parts = rawName.split(/ and | And | AND | \/ |\/| \\ |\\/g).map(s => s.trim()).filter(s => s !== '');
+                    // We use negative lookbehind to avoid splitting common relationship prefixes like W/O, S/O, D/O, C/O
+                    const parts = rawName.split(/ and | And | AND | \/ |(?<![WSDC])\/| \\ |\\/g).map(s => s.trim()).filter(s => s !== '');
 
                     if (parts.length > 1) {
                         row[fullNameMapping.sourceHeader] = parts[0]; // First name stays
@@ -677,6 +713,143 @@ export function useCSVMapping() {
             }
         }
 
+        // --- Borrower Rotation Logic ---
+        if (isRotationEnabled) {
+            const rotatedRows: any[] = [];
+            
+            // 1. DYNAMICALLY group borrower columns by index and type
+            const fieldMapping: Array<Record<string, string>> = [];
+            
+            headers.forEach(col => {
+                const mapping = mappings.find(m => m.sourceHeader === col);
+                const targetHeader = mapping?.targetHeader || col;
+                const lowerCol = targetHeader.toLowerCase();
+                
+                // Determine field type (Only rotate person-specific details)
+                let type = 'unknown';
+                if (lowerCol.includes('phone') || lowerCol.includes('mobile')) type = 'phone';
+                else if (lowerCol.includes('father') || lowerCol.includes('mother')) type = 'parent';
+                else if (lowerCol.includes('email')) type = 'email';
+                else if (lowerCol.includes('dob') || lowerCol.includes('birth')) type = 'dob';
+                else if (lowerCol.includes('pan') || lowerCol.includes('aadhaar')) type = 'id';
+                else if (lowerCol.includes('pin') || lowerCol.includes('zip')) type = 'pincode';
+                else if (lowerCol.includes('state')) type = 'state';
+                else if (lowerCol.includes('city')) type = 'city';
+                else if (lowerCol.includes('address')) type = 'address';
+                else if (lowerCol.includes('lender') || lowerCol.includes('branch') || lowerCol.includes('bank')) {
+                    // Skip these to avoid misidentifying "Lender Name" as a borrower name
+                }
+                else if (lowerCol.includes('name') || lowerCol.includes('borrower') || lowerCol.includes('applicant') || lowerCol.includes('acm')) type = 'name';
+                
+                if (type === 'unknown') return;
+                
+                // Determine index
+                let idx = 0;
+                const match = lowerCol.match(/\d+$/);
+                if (match) {
+                    idx = parseInt(match[0], 10);
+                } else if (
+                    lowerCol.includes('co-borrower') || lowerCol.includes('coborrower') || lowerCol.includes('co borrower') ||
+                    lowerCol.includes('co-applicant') || lowerCol.includes('coapplicant') || lowerCol.includes('co applicant') ||
+                    lowerCol.includes('joint') || lowerCol.includes('secondary')
+                ) {
+                    idx = 1;
+                }
+                
+                if (!fieldMapping[idx]) fieldMapping[idx] = {};
+                
+                const isNameType = type === 'name';
+                const hasNameInHeader = lowerCol.includes('name');
+                const isPerfectMatch = lowerCol === 'name' || lowerCol === 'borrower name' || lowerCol === 'co-borrower name' || lowerCol === 'co-applicant name';
+                
+                const currentHeader = fieldMapping[idx][type] ? fieldMapping[idx][type].toLowerCase() : '';
+                const currentHasName = currentHeader.includes('name');
+                
+                // Selection Logic: 
+                // 1. If we don't have a column for this type yet, take it.
+                // 2. If it's a name, prefer columns that actually have the word "name" in the header.
+                // 3. Prefer "perfect" matches over partial ones.
+                if (!fieldMapping[idx][type] || 
+                    (isNameType && isPerfectMatch) || 
+                    (isNameType && hasNameInHeader && !currentHasName)) {
+                    fieldMapping[idx][type] = col;
+                }
+            });
+            
+            const validIndexes: number[] = [];
+            for (let i = 0; i < fieldMapping.length; i++) {
+                if (fieldMapping[i]) validIndexes.push(i);
+            }
+            
+                data.forEach(row => {
+                // Find active borrowers in this row
+                const activeBorrowers: Record<string, any>[] = [];
+                
+                validIndexes.forEach(idx => {
+                     const borrowerData: Record<string, any> = {};
+                     let hasName = false;
+                     
+                     // Collect all field values for this borrower index
+                     Object.keys(fieldMapping[idx]).forEach(type => {
+                          const colName = fieldMapping[idx][type];
+                          const val = row[colName];
+                          borrowerData[type] = val;
+                          
+                          const cleanVal = String(val || "").trim().toLowerCase();
+                          const isPlaceholder = cleanVal === "" || 
+                                               cleanVal === "n/a" || 
+                                               cleanVal === "na" ||
+                                               cleanVal === "(co-borrower)" || 
+                                               cleanVal === "co-borrower" || 
+                                               cleanVal === "-" || 
+                                               cleanVal === ".";
+                          
+                          if (!isPlaceholder && type === 'name') {
+                               hasName = true;
+                          }
+                     });
+                     
+                     // CRITICAL FIX: We consider the borrower present ONLY if they have a non-empty name
+                     if (hasName) {
+                          activeBorrowers.push(borrowerData);
+                     }
+                });
+                
+                if (activeBorrowers.length > 1) {
+                    for (let i = 0; i < activeBorrowers.length; i++) {
+                        const newRow = { ...row };
+                        
+                        // Overwrite with rotated values into the available slot positions
+                        validIndexes.forEach((idx, validPos) => {
+                             const targetIdx = (i + validPos) % activeBorrowers.length;
+                             const hasDataToRotate = validPos < activeBorrowers.length;
+                             
+                             Object.keys(fieldMapping[idx]).forEach(type => {
+                                  const colName = fieldMapping[idx][type];
+                                  if (hasDataToRotate) {
+                                      let val = activeBorrowers[targetIdx]?.[type] || "";
+                                      // FALLBACK: If rotated borrower has no phone, use primary borrower's phone
+                                      if (type === 'phone' && (!val || String(val).trim() === "") && activeBorrowers[0]?.phone) {
+                                          val = activeBorrowers[0].phone;
+                                      }
+                                      newRow[colName] = val;
+                                  } else {
+                                      // Clear unused slots so data doesn't duplicate awkwardly
+                                      newRow[colName] = "";
+                                  }
+                             });
+                        });
+                        
+                        newRow['__rotationIndex'] = i;
+                        rotatedRows.push(newRow);
+                    }
+                } else {
+                    rotatedRows.push(row);
+                }
+            });
+            data = rotatedRows;
+        }
+
         // 4. Barcode Generation Logic (Physical Mode)
         if (isPhysical) {
             const phoneMapping = activeMappings.find(m =>
@@ -1002,15 +1175,15 @@ export function useCSVMapping() {
             data,
             headers,
         };
-    }, [parsedData, mappings, isConsolidated, isPhysical, fetchedBarcodes, allowDuplicateBarcodes]);
+    }, [parsedData, mappings, isConsolidated, isPhysical, fetchedBarcodes, allowDuplicateBarcodes, isRotationEnabled]);
 
     // Effect to fetch and sync barcodes
     useEffect(() => {
         const syncBarcodes = async () => {
-            if (!isPhysical || !parsedData) return;
+            if (!isPhysical || !processedData) return;
 
             // 1. Calculate Needs (inline to avoid dependency issues)
-            const dataRows = parsedData?.data || [];
+            const dataRows = processedData?.data || [];
             const phoneMapping = activeMappings.find(m =>
                 m.targetHeader?.toLowerCase().includes('phone') ||
                 m.targetHeader?.toLowerCase().includes('mobile')
@@ -1145,7 +1318,7 @@ export function useCSVMapping() {
         };
 
         syncBarcodes();
-    }, [isPhysical, parsedData, activeMappings, physicalLenderName, allowDuplicateBarcodes, fetchedBarcodes]);
+    }, [isPhysical, processedData, activeMappings, physicalLenderName, allowDuplicateBarcodes, fetchedBarcodes]);
 
     useEffect(() => {
         if (!isPhysical) {
@@ -1256,6 +1429,24 @@ export function useCSVMapping() {
         setIsProcessing(true);
         try {
             const parsed = await parseCSVFile(file);
+            let templatesForDetection = lenderTemplates;
+
+            if (!hasLoadedServerTemplates || Object.keys(templatesForDetection).length === 0) {
+                try {
+                    const response = await fetch('/api/templates');
+                    if (response.ok) {
+                        const serverTemplates = await response.json();
+                        if (serverTemplates && Object.keys(serverTemplates).length > 0) {
+                            templatesForDetection = mergeLenderTemplateStores(templatesForDetection, serverTemplates);
+                            setLenderTemplates(templatesForDetection);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to refresh templates before upload", e);
+                } finally {
+                    setHasLoadedServerTemplates(true);
+                }
+            }
 
             // FIX: Filter out columns that have absolutely no data (completely empty across all rows)
             const nonEmptyHeaders = parsed.headers.filter(header => {
@@ -1289,41 +1480,57 @@ export function useCSVMapping() {
             let highestMatchScore = 0;
             let highestMatchCount = 0;
             const threshold = 0.5; // at least 50% of CSV headers must match the template
-            
-            Object.keys(lenderTemplates).forEach(lenderName => {
-                const template = lenderTemplates[lenderName];
-                const templateKeys = Object.keys(template).filter(k => !k.startsWith('__'));
-                if (templateKeys.length === 0) return;
-                
-                const templateValues = Object.values(template).filter(v => v !== '__SKIPPED__' && typeof v === 'string');
 
-                let keyMatchCount = 0;
-                let valueMatchCount = 0;
-                
-                const safeHeaderStrings = parsed.headers.map(h => String(h).toLowerCase().trim());
-                
-                safeHeaderStrings.forEach(hstr => {
-                    if (templateKeys.some(tk => String(tk).toLowerCase().trim() === hstr)) {
-                        keyMatchCount++;
-                    }
-                    if (templateValues.some(tv => String(tv).toLowerCase().trim() === hstr)) {
-                        valueMatchCount++;
-                    }
-                });
-
-                // Score based on what percentage of the UPLOADED headers are recognized by this template
-                const matches = Math.max(keyMatchCount, valueMatchCount);
-                const score = matches / parsed.headers.length;
-
-                // If scores are equal, the one with more absolute matches wins
-                if (score > highestMatchScore || (score === highestMatchScore && matches > highestMatchCount)) {
-                    if (score >= threshold) {
-                        highestMatchScore = score;
-                        highestMatchCount = matches;
-                        bestLenderMatch = lenderName;
-                    }
+            // --- Filename based detection (Stronger signal) ---
+            const normalizedFileName = file.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            Object.keys(templatesForDetection).forEach(lenderName => {
+                const normalizedLender = lenderName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                // Check if lender name is in filename (e.g. "CFM" in "CFMARC...")
+                if (normalizedFileName.includes(normalizedLender) || normalizedLender.includes(normalizedFileName)) {
+                    bestLenderMatch = lenderName;
+                    highestMatchScore = 1.0; // Perfect score for filename match
                 }
             });
+
+            // --- Header based detection (Fallback/Secondary) ---
+            if (!bestLenderMatch) {
+                Object.keys(templatesForDetection).forEach(lenderName => {
+                    const template = templatesForDetection[lenderName];
+                    const templateKeys = Object.keys(template).filter(k => !k.startsWith('__'));
+                    if (templateKeys.length === 0) return;
+                    
+                    const templateValues = Object.values(template).filter(v => v !== '__SKIPPED__' && typeof v === 'string');
+                    const templateKeySet = new Set(templateKeys.map(normalizeTemplateHeader));
+                    const templateValueSet = new Set(templateValues.map(normalizeTemplateHeader));
+
+                    let keyMatchCount = 0;
+                    let valueMatchCount = 0;
+                    
+                    const safeHeaderStrings = parsed.headers.map(normalizeTemplateHeader);
+                    
+                    safeHeaderStrings.forEach(hstr => {
+                        if (templateKeySet.has(hstr)) {
+                            keyMatchCount++;
+                        }
+                        if (templateValueSet.has(hstr)) {
+                            valueMatchCount++;
+                        }
+                    });
+
+                    // Score based on what percentage of the UPLOADED headers are recognized by this template
+                    const matches = Math.max(keyMatchCount, valueMatchCount);
+                    const score = matches / parsed.headers.length;
+
+                    // If scores are equal, the one with more absolute matches wins
+                    if (score > highestMatchScore || (score === highestMatchScore && matches > highestMatchCount)) {
+                        if (score >= threshold) {
+                            highestMatchScore = score;
+                            highestMatchCount = matches;
+                            bestLenderMatch = lenderName;
+                        }
+                    }
+                });
+            }
 
             if (bestLenderMatch) {
                 toast.success(`Detected lender: ${bestLenderMatch}`);
@@ -1334,7 +1541,7 @@ export function useCSVMapping() {
                 setHasUnsavedChanges(false);
             }
 
-            const currentLenderMemory = bestLenderMatch ? lenderTemplates[bestLenderMatch] : {};
+            const currentLenderMemory = bestLenderMatch ? templatesForDetection[bestLenderMatch] : {};
 
             // AI-based mapping using Gemini (Backend) with Local Worker as Fallback
             let rawMappings: any[] = [];
@@ -1900,106 +2107,6 @@ export function useCSVMapping() {
 
         let finalDataRows = mappedRows;
 
-        if (isRotationEnabled) {
-            const rotatedRows: any[] = [];
-            
-            // 1. DYNAMICALLY group borrower columns by index and type
-            const fieldMapping: Array<Record<string, string>> = [];
-            
-            Array.from(finalHeaders).forEach(col => {
-                const lowerCol = col.toLowerCase();
-                
-                // Determine field type (Only rotate person-specific details)
-                let type = 'unknown';
-                if (lowerCol.includes('phone') || lowerCol.includes('mobile')) type = 'phone';
-                else if (lowerCol.includes('father') || lowerCol.includes('mother')) type = 'parent';
-                else if (lowerCol.includes('email')) type = 'email';
-                else if (lowerCol.includes('dob') || lowerCol.includes('birth')) type = 'dob';
-                else if (lowerCol.includes('pan') || lowerCol.includes('aadhaar')) type = 'id';
-                else if (lowerCol.includes('pin') || lowerCol.includes('zip')) type = 'pincode';
-                else if (lowerCol.includes('state')) type = 'state';
-                else if (lowerCol.includes('city')) type = 'city';
-                else if (lowerCol.includes('address')) type = 'address';
-                else if (lowerCol.includes('name') || lowerCol.includes('borrower') || lowerCol.includes('acm')) type = 'name';
-                
-                if (type === 'unknown') return;
-                
-                // Determine index
-                let idx = 0;
-                const match = lowerCol.match(/\d+$/);
-                if (match) {
-                    idx = parseInt(match[0], 10);
-                } else if (lowerCol.includes('co-borrower') || lowerCol.includes('coborrower') || lowerCol.includes('co borrower')) {
-                    idx = 1;
-                }
-                
-                if (!fieldMapping[idx]) fieldMapping[idx] = {};
-                
-                // Store column name but avoid overwriting a perfect basic 'name' match with a secondary column
-                if (!fieldMapping[idx][type] || (type === 'name' && (lowerCol === 'name' || lowerCol.includes('co-borrower')))) {
-                    fieldMapping[idx][type] = col;
-                }
-            });
-            
-            const validIndexes: number[] = [];
-            for (let i = 0; i < fieldMapping.length; i++) {
-                if (fieldMapping[i]) validIndexes.push(i);
-            }
-            
-            mappedRows.forEach(row => {
-                // Find active borrowers in this row
-                const activeBorrowers: Record<string, any>[] = [];
-                
-                validIndexes.forEach(idx => {
-                     const borrowerData: Record<string, any> = {};
-                     let hasAnyValue = false;
-                     
-                     // Collect all field values for this borrower index
-                     Object.keys(fieldMapping[idx]).forEach(type => {
-                          const colName = fieldMapping[idx][type];
-                          const val = row[colName];
-                          borrowerData[type] = val;
-                          
-                          if (val && String(val).trim() !== "") {
-                              hasAnyValue = true;
-                          }
-                     });
-                     
-                     // We consider the borrower present if ANY of their mapped person-specific fields has data
-                     if (hasAnyValue) {
-                         activeBorrowers.push(borrowerData);
-                     }
-                });
-                
-                if (activeBorrowers.length > 1) {
-                    for (let i = 0; i < activeBorrowers.length; i++) {
-                        const newRow = { ...row };
-                        
-                        // Overwrite with rotated values into the available slot positions
-                        validIndexes.forEach((idx, validPos) => {
-                             const targetIdx = (i + validPos) % activeBorrowers.length;
-                             const hasDataToRotate = validPos < activeBorrowers.length;
-                             
-                             Object.keys(fieldMapping[idx]).forEach(type => {
-                                  const colName = fieldMapping[idx][type];
-                                  if (hasDataToRotate) {
-                                      newRow[colName] = activeBorrowers[targetIdx]?.[type] || "";
-                                  } else {
-                                      // Clear unused slots so data doesn't duplicate awkwardly
-                                      newRow[colName] = "";
-                                  }
-                             });
-                        });
-                        
-                        newRow['__rotationIndex'] = i;
-                        rotatedRows.push(newRow);
-                    }
-                } else {
-                    rotatedRows.push(row);
-                }
-            });
-            finalDataRows = rotatedRows;
-        }
 
         // Convert all keys and headers to lowercase as requested
         const loweredHeaders = Array.from(finalHeaders).map(h => h.toLowerCase());

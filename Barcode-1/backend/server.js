@@ -142,6 +142,22 @@ app.post('/api/barcodes', async (req, res) => {
                     return b;
                 });
             }
+        } else if (action === 'resetByCode') {
+            const { barcodeCodes } = body;
+            if (Array.isArray(barcodeCodes)) {
+                const codesToReset = new Set(barcodeCodes);
+                barcodes = barcodes.map(b =>
+                    codesToReset.has(b.code) ? {
+                        ...b,
+                        isUsed: false,
+                        lenderName: '',
+                        bankName: undefined,
+                        lan: '',
+                        usedAt: undefined,
+                        resetAt: undefined
+                    } : b
+                );
+            }
         } else if (action === 'resetByLender') {
             if (targetLender) {
                 barcodes = barcodes.map(b => {

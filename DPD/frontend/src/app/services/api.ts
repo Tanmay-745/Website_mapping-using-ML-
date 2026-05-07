@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { AllocationData } from '../types';
 
-const API_base_URL = 'http://localhost:8000'; // Make sure this matches your FastAPI port
+const API_HOST = window.location.hostname || 'localhost';
+const API_base_URL = `http://${API_HOST}:8000`; // Make sure this matches your FastAPI port
 
 const api = axios.create({
     baseURL: API_base_URL,

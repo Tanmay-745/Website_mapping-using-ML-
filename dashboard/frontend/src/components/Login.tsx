@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { UserCircle2, Building2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 
+const API_HOST = window.location.hostname || 'localhost';
+
 interface Lender {
   id: string;
   name: string;
@@ -21,7 +23,7 @@ export const Login = ({ onLogin }: LoginProps) => {
     const loadLenders = async () => {
       setFetchingLenders(true);
       try {
-        const response = await fetch('http://localhost:8001/api/lenders');
+        const response = await fetch(`http://${API_HOST}:8001/api/lenders`);
         const data = await response.json();
         setLenders(data);
         if (data.length > 0) {

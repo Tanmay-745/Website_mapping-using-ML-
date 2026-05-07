@@ -138,6 +138,19 @@ async def write_barcodes(request: Request):
                     if b.get('isUsed') and b_lender == old_lender_name:
                         b['bankName'] = new_lender_name
                         
+        elif action == 'resetByCode':
+            barcode_codes = body.get('barcodeCodes')
+            if barcode_codes and isinstance(barcode_codes, list):
+                codes_to_reset = set(barcode_codes)
+                for b in barcodes:
+                    if b.get('code') in codes_to_reset:
+                        b['isUsed'] = False
+                        b['lenderName'] = ''
+                        b['bankName'] = None
+                        b['lan'] = ''
+                        b.pop('usedAt', None)
+                        b.pop('resetAt', None)
+                        
         elif action == 'resetByLender':
             if target_lender:
                 for b in barcodes:
@@ -155,7 +168,6 @@ async def write_barcodes(request: Request):
                         b['lan'] = ''
                         b.pop('usedAt', None)
                         b.pop('resetAt', None)
-                        
         elif action == 'add' and new_barcodes:
             existing_codes = set(b.get('code') for b in barcodes)
             try:

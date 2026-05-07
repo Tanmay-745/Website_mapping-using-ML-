@@ -2,13 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { FileText, Database, ScanLine, X, Sun, Moon, Mail, Activity, LogOut, User as UserIcon } from 'lucide-react';
 import { Login } from './components/Login';
 
+const LAN_HOST = window.location.hostname || 'localhost';
+const appUrl = (port: number, path = '') => `http://${LAN_HOST}:${port}${path}`;
+
 // Configuration for the apps
 const APPS = [
-  { id: 'legal-mapping', name: 'Legal Mapping', url: 'http://localhost:5175/mapping/', icon: Database },
-  { id: 'legal-pro', name: 'Legal Pro', url: 'http://localhost:3001/ai/', icon: FileText },
-  { id: 'barcode', name: 'Barcode', url: 'http://localhost:3000', icon: ScanLine },
-  { id: 'dpd-tracker', name: 'DPD Tracker', url: 'http://localhost:5174', icon: Activity },
-  { id: 'cover-letter', name: 'Cover Letter', url: 'http://localhost:5001', icon: Mail }
+  { id: 'legal-mapping', name: 'Legal Mapping', url: appUrl(5175, '/mapping/'), icon: Database },
+  { id: 'legal-pro', name: 'Legal Pro', url: appUrl(3001, '/ai/'), icon: FileText },
+  { id: 'barcode', name: 'Barcode', url: appUrl(3000), icon: ScanLine },
+  { id: 'dpd-tracker', name: 'DPD Tracker', url: appUrl(5174), icon: Activity },
+  { id: 'cover-letter', name: 'Cover Letter', url: appUrl(5001), icon: Mail }
 ];
 
 interface CurrentUser {

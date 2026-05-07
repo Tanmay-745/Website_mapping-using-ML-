@@ -39,6 +39,8 @@ export default function BarcodePage() {
   const [editingOldLenderName, setEditingOldLenderName] = React.useState("")
   const [editingNewLenderName, setEditingNewLenderName] = React.useState("")
   const [uploadPreview, setUploadPreview] = React.useState<BarcodeItem[]>([])
+  const [barcodeToResetManual, setBarcodeToResetManual] = React.useState("")
+  const [isResetting, setIsResetting] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // Fetch barcodes on mount and listen for reload requests
@@ -359,6 +361,63 @@ export default function BarcodePage() {
     }
   }
 
+  const handleManualReset = async () => {
+    if (!barcodeToResetManual.trim()) {
+      toast.error("Please enter at least one barcode")
+      return
+    }
+
+    // Split by comma or space and filter out empty strings
+    const codes = barcodeToResetManual
+      .split(/[,\s]+/)
+      .map(c => c.trim())
+      .filter(c => c.length > 0)
+
+    if (codes.length === 0) {
+      toast.error("No valid barcodes found")
+      return
+    }
+
+    setIsResetting(true)
+    try {
+      const res = await fetch('/api/barcodes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'resetByCode',
+          barcodeCodes: codes
+        })
+      })
+      
+      const data = await res.json()
+      if (data.success) {
+        // Check which barcodes were actually found
+        const existingCodes = new Set(barcodes.map(b => b.code))
+        const foundCodes = codes.filter(c => existingCodes.has(c))
+        const missingCodes = codes.filter(c => !existingCodes.has(c))
+
+        if (foundCodes.length > 0) {
+          fetchBarcodes()
+          if (missingCodes.length === 0) {
+            toast.success(`Successfully reset ${foundCodes.length} barcode(s)`)
+          } else {
+            toast.success(`Reset ${foundCodes.length} barcode(s). ${missingCodes.length} not found.`)
+          }
+          setBarcodeToResetManual("")
+        } else {
+          toast.error(`None of the ${codes.length} barcode(s) were found`)
+        }
+      } else {
+        toast.error("Failed to reset barcodes")
+      }
+    } catch (e) {
+      console.error("Manual reset failed", e)
+      toast.error("An error occurred while resetting barcodes")
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
   const downloadLenderCSV = (lenderName: string) => {
     const lenderBarcodes = barcodes.filter(b => 
       b.isUsed && (b.bankName === lenderName || (!b.bankName && lenderName === "Unknown Lender"))
@@ -424,31 +483,52 @@ export default function BarcodePage() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col gap-6">
           {userContext.role === 'admin' && (
-            <div className="flex justify-end gap-3">
-              <Button
-                onClick={downloadAllCSV}
-                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-700"
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download All
-              </Button>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                className="hidden"
-                id="csv-upload"
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-700"
-                variant="outline"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload CSV
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-1.5 rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
+                <Input
+                  placeholder="Enter barcode(s) (comma or space separated)..."
+                  value={barcodeToResetManual}
+                  onChange={(e) => setBarcodeToResetManual(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleManualReset()}
+                  className="w-80 h-9 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+                <Button
+                  onClick={handleManualReset}
+                  disabled={isResetting || !barcodeToResetManual.trim()}
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white h-8"
+                >
+                  <RotateCcw className={`h-4 w-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
+                  Reset Barcode
+                </Button>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={downloadAllCSV}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-700"
+                  variant="outline"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download All
+                </Button>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="hidden"
+                  id="csv-upload"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-700"
+                  variant="outline"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload CSV
+                </Button>
+              </div>
             </div>
           )}
 

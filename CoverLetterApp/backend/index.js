@@ -14,6 +14,25 @@ const bwipjs = require('bwip-js');
 const upload = multer({ dest: 'uploads/' });
 
 const jobs = {};
+let browserInstance = null;
+
+async function getBrowser() {
+    if (!browserInstance) {
+        console.log("Launching new browser instance...");
+        browserInstance = await puppeteer.launch({
+            headless: 'new',
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--memory-pressure-thresholds=medium'],
+            timeout: 120000 // Increase timeout to 2 minutes
+        });
+        
+        // Handle unexpected browser closure
+        browserInstance.on('disconnected', () => {
+            console.log("Browser disconnected. Resetting instance.");
+            browserInstance = null;
+        });
+    }
+    return browserInstance;
+}
 
 app.post('/generate-pdfs', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'headerImage', maxCount: 1 }]), (req, res) => {
     if (!req.files || !req.files.file) {
@@ -107,6 +126,13 @@ app.post('/cancel/:jobId', (req, res) => {
     }
 });
 
+app.get('/sample.csv', (req, res) => {
+    const csvContent = "barcode,name,Address,mobile number\n123456789,John Doe,123 Main St City State 12345,9876543210\n";
+    res.header('Content-Type', 'text/csv');
+    res.attachment('sample_cover_letter.csv');
+    return res.send(csvContent);
+});
+
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -158,7 +184,13 @@ app.get('/', (req, res) => {
                     <form id="uploadForm" class="mb-6">
                         <div class="flex flex-col gap-4 mb-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">1. Upload CSV Data (Required)</label>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">1. Upload CSV Data (Required)</label>
+                                    <a href="/sample.csv" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-xs flex items-center gap-1 font-medium transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                        Download Sample CSV
+                                    </a>
+                                </div>
                                 <input type="file" id="csvFile" name="file" accept=".csv" required 
                                     class="block w-full text-sm text-gray-500 dark:text-gray-400
                                         file:mr-4 file:py-2.5 file:px-4
@@ -486,8 +518,13 @@ async function processCSVAndGeneratePDFs(filePath, headerImagePath, originalFile
     const rows = [];
 
     return new Promise((resolve, reject) => {
+        let headersProcessed = false;
+
         fs.createReadStream(filePath)
-            .pipe(csv())
+            .pipe(csv({
+                mapHeaders: ({ header }) => header.trim().replace(/^\ufeff/, ''), // Strip BOM and trim
+                separator: ',' // Default, but we can't easily auto-detect inside pipe easily without pre-reading
+            }))
             .on('data', (row) => rows.push(row))
             .on('end', async () => {
                 try {
@@ -498,18 +535,33 @@ async function processCSVAndGeneratePDFs(filePath, headerImagePath, originalFile
                     }
 
                     for (const row of rows) {
-                        if (jobs[jobId] && jobs[jobId].isCancelled) {
-                            console.log(`Job ${jobId} cancelled. Stopping early.`);
-                            break;
-                        }
+                        if (jobs[jobId] && jobs[jobId].isCancelled) break;
 
                         try {
                             const pdfUrl = row['PDF_URL'];
-                            const lan = row['barcode'] || row['LAN'] || row['id'] || 'UNKNOWN';
+                            
+                            const findValue = (obj, variations) => {
+                                const keys = Object.keys(obj);
+                                if (!headersProcessed) {
+                                    console.log("Job", jobId, "detected keys:", keys);
+                                    headersProcessed = true;
+                                }
+                                // 1. Try exact matches first
+                                for (const v of variations) {
+                                    if (obj[v]) return obj[v];
+                                }
+                                // 2. Try normalized matches
+                                for (const v of variations) {
+                                    const match = keys.find(k => k.toLowerCase().replace(/[^a-z]/g, '') === v.toLowerCase().replace(/[^a-z]/g, ''));
+                                    if (match && obj[match]) return obj[match];
+                                }
+                                return '';
+                            };
 
-                            let name = row['name'] || '';
-                            let address = row['Address'] || row['ApplicantAddress'] || '';
-                            let phone = row['mobile number'] || row['ApplicantMobileNO'] || '';
+                            const lan = findValue(row, ['barcode', 'LAN', 'id', 'application_no', 'loan_no', 'applicationno']) || 'UNKNOWN';
+                            let name = findValue(row, ['name', 'borrower name', 'customer name', 'applicant name', 'full name', 'borrower', 'customer', 'applicant', 'recipient']);
+                            let address = findValue(row, ['address', 'applicant address', 'customer address', 'full address', 'residence address', 'location']);
+                            let phone = findValue(row, ['mobile number', 'phone', 'mobile', 'applicant mobile', 'customer mobile', 'contact', 'phoneno']);
 
                             if (pdfUrl) {
                                 console.log(`Parsing PDF for LAN: ${lan}`);
@@ -594,10 +646,7 @@ async function generateMergedPdf(envelopesData, headerImagePath, filename, sende
     const mergedFileName = `merged_${Date.now()}.pdf`;
     const pdfPath = path.join(outputDir, mergedFileName);
 
-    const browser = await puppeteer.launch({
-        headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--memory-pressure-thresholds=medium']
-    });
+    const browser = await getBrowser();
 
     try {
         const mergedPdf = await PDFDocument.create();
@@ -631,8 +680,9 @@ async function generateMergedPdf(envelopesData, headerImagePath, filename, sende
         console.log(`Successfully generated merged PDF: ${mergedFileName}`);
         return mergedFileName;
 
-    } finally {
-        await browser.close();
+    } catch (err) {
+        console.error("Error generating PDF:", err);
+        throw err;
     }
 }
 

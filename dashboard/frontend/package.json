@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm:dev:dashboard\" \"npm:dev:legal-pro\" \"npm:dev:legal-mapping\" \"npm:dev:barcode\" \"npm:dev:dpd\"",
-    "dev:dashboard": "vite",
+    "dev:dashboard": "vite --host 0.0.0.0",
     "dev:legal-pro": "npm run dev --prefix \"../legal pro/AI Legal Portal\"",
     "dev:legal-mapping": "npm run dev --prefix \"../Legal mapping\"",
     "dev:barcode": "npm run dev --prefix ../Barcode-1",

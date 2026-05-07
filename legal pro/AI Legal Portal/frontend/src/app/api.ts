@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost:54321";
+const API_HOST = window.location.hostname || "localhost";
+export const API_BASE = `http://${API_HOST}:54321`;
 
 export interface GenerateRequest {
     prompt: string;
@@ -188,6 +189,44 @@ export async function saveTemplateToFolder(lender: string, type: string, content
         body: JSON.stringify({ lender, type, content }),
     });
     return response.ok;
+}
+
+export interface ExportNoticesRequest {
+    content: string;
+    rows?: Record<string, string>[];
+    sampleData?: Record<string, string>[];
+    templateName?: string;
+    templateDocxBase64?: string;
+    filenamePrefix?: string;
+    lender?: string;
+    noticeType?: string;
+    barcodeField?: string;
+    signature?: string;
+    advocateDetails?: any;
+    exportPdf?: boolean;
+    mergePdf?: boolean;
+    includeDocx?: boolean;
+}
+
+export async function exportNoticesZip(payload: ExportNoticesRequest): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/api/notices/export`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        let message = "Notice export failed";
+        try {
+            const data = await response.json();
+            message = data.error || data.detail || message;
+        } catch {
+            message = await response.text();
+        }
+        throw new Error(message);
+    }
+
+    return response.blob();
 }
 
 export async function mapVariablesML(placeholders: string[], sourceColumns: string[]): Promise<{ placeholder: string, suggested_column: string, confidence: number }[]> {

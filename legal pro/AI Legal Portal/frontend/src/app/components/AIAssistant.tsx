@@ -4,7 +4,7 @@ import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { Bot, Send, X, Loader2, AlertCircle } from "lucide-react";
-import { generateNoticeContent, checkServerHealth } from "../api";
+import { API_BASE, generateNoticeContent, checkServerHealth } from "../api";
 import { toast } from "sonner";
 
 export function AIAssistant() {
@@ -53,7 +53,7 @@ export function AIAssistant() {
             // Let's check api.ts again - I updated the interface but not the return type of common usage.
             
             // Re-fetch with awareness of the new return structure
-            const response = await fetch(`http://localhost:54321/functions/v1/server/api/generate`, {
+            const response = await fetch(`${API_BASE}/functions/v1/server/api/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: userMessage, context: { type: "chat" }, messages: fullHistory }),

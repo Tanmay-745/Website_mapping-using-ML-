@@ -53,8 +53,8 @@
 
         .to-section {
             position: absolute;
-            top: 48mm;
-            /* Increased gap to accommodate header */
+            top: 52mm;
+            /* Increased gap to accommodate header and code */
             left: 20mm;
             width: 100mm;
             font-size: 11pt;
@@ -122,6 +122,15 @@
             color: black;
         }
 
+        .left-code-section {
+            position: absolute;
+            top: 42mm;
+            left: 20mm;
+            font-size: 13pt;
+            font-weight: bold;
+            color: black;
+        }
+
         @media screen {
             body {
                 background: #f0f0f0;
@@ -147,13 +156,20 @@
                         <img src="<%= logoDataUri %>" alt="Header Logo" />
                     </div>
                     <% } %>
+                        <div class="left-code-section">
+                            921-545-SP-NAF
+
+                        </div>
+
                         <div class="to-section">
                             To: <%= env.name %> <br>
-                                Mobile No: <%= env.phone %><br>
-                                    <div class="small">
-                                        <b>Address:</b>
-                                        <%= env.address %>
-                                    </div>
+                                <% if (env.phone && env.phone.toString().trim() !=='' ) { %>
+                                    Mobile No: <%= env.phone %><br>
+                                        <% } %>
+                                            <div class="small">
+                                                <b>Address:</b>
+                                                <%= env.address %>
+                                            </div>
                         </div>
 
                         <div class="barcode-wrapper">
@@ -179,7 +195,7 @@
                         </div>
 
                         <div class="code-section">
-                            921-482
+                            CFMARC TRUST-196
                         </div>
             </div>
             <% }); %>

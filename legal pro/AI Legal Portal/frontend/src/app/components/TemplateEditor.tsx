@@ -1,4 +1,4 @@
-import React, { useRef, useId, useMemo, forwardRef, useImperativeHandle } from "react";
+import React, { useRef, useId, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -6,6 +6,60 @@ import "react-quill/dist/quill.snow.css";
 const Size = Quill.import('attributors/style/size');
 Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px', '36px'];
 Quill.register(Size, true);
+
+const Parchment = Quill.import("parchment") as any;
+const Block = Quill.import("blots/block") as any;
+const Container = Quill.import("blots/container") as any;
+const TABLE_CLASS = "ql-template-table";
+const TABLE_CELL_LINE_CLASS = "ql-template-table-cell-line";
+
+class TableCellLine extends Block {
+  static create(value: unknown) {
+    const node = super.create(value);
+    node.classList.add(TABLE_CELL_LINE_CLASS);
+    return node;
+  }
+}
+TableCellLine.blotName = "table-cell-line";
+TableCellLine.className = TABLE_CELL_LINE_CLASS;
+TableCellLine.tagName = "P";
+
+class TableCell extends Container {}
+TableCell.blotName = "table-cell";
+TableCell.scope = Parchment.Scope.BLOCK_BLOT;
+TableCell.tagName = "TD";
+TableCell.defaultChild = "table-cell-line";
+TableCell.allowedChildren = [TableCellLine];
+
+class TableRow extends Container {}
+TableRow.blotName = "table-row";
+TableRow.scope = Parchment.Scope.BLOCK_BLOT;
+TableRow.tagName = "TR";
+TableRow.defaultChild = "table-cell";
+TableRow.allowedChildren = [TableCell];
+
+class TableBody extends Container {}
+TableBody.blotName = "table-body";
+TableBody.scope = Parchment.Scope.BLOCK_BLOT;
+TableBody.tagName = "TBODY";
+TableBody.defaultChild = "table-row";
+TableBody.allowedChildren = [TableRow];
+
+class TableContainer extends Container {}
+TableContainer.blotName = "template-table";
+TableContainer.scope = Parchment.Scope.BLOCK_BLOT;
+TableContainer.className = TABLE_CLASS;
+TableContainer.tagName = "TABLE";
+TableContainer.defaultChild = "table-body";
+TableContainer.allowedChildren = [TableBody, TableRow];
+
+Quill.register({
+  "formats/table-cell-line": TableCellLine,
+  "formats/table-cell": TableCell,
+  "formats/table-row": TableRow,
+  "formats/table-body": TableBody,
+  "formats/template-table": TableContainer
+}, true);
 
 import {
   DropdownMenu,
@@ -15,7 +69,7 @@ import {
 } from "./ui/dropdown-menu";
 import { 
   ChevronDown, Sparkles, FileText, CheckCircle2, 
-  AlertCircle, Info, Hash, Check
+  AlertCircle, Info, Hash, Check, Table2, Plus, Minus
 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import {
@@ -84,6 +138,17 @@ export const TemplateEditor = forwardRef<TemplateEditorHandle, TemplateEditorPro
     }
   }), [toolbarId]);
 
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill || !content.includes("<table")) return;
+
+    if (quill.root.innerHTML !== content) {
+      quill.root.innerHTML = content;
+      quill.update(Quill.sources.SILENT);
+      (quillRef.current as any).value = content;
+    }
+  }, [content]);
+
   // Insert Variable
   const insertVariable = (variable: string) => {
     const quill = quillRef.current?.getEditor();
@@ -109,6 +174,224 @@ export const TemplateEditor = forwardRef<TemplateEditorHandle, TemplateEditorPro
     });
 
     onInsertVariable(variable);
+  };
+
+  const createEmptyTableCell = () => {
+    const cell = document.createElement("td");
+    const line = document.createElement("p");
+    line.className = TABLE_CELL_LINE_CLASS;
+    line.appendChild(document.createElement("br"));
+    cell.appendChild(line);
+    return cell;
+  };
+
+  const createTableElement = (rows = 2, columns = 2) => {
+    const table = document.createElement("table");
+    table.className = TABLE_CLASS;
+    const tbody = document.createElement("tbody");
+
+    Array.from({ length: rows }).forEach(() => {
+      const row = document.createElement("tr");
+      Array.from({ length: columns }).forEach(() => {
+        row.appendChild(createEmptyTableCell());
+      });
+      tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    return table;
+  };
+
+  const syncTableChange = (message?: string) => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    quill.update(Quill.sources.USER);
+    const html = quill.root.innerHTML;
+    (quillRef.current as any).value = html;
+    onChange(html);
+
+    if (message) {
+      toast.success(message, { duration: 1600 });
+    }
+  };
+
+  const placeCursorInCell = (cell: HTMLTableCellElement | null | undefined) => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill || !cell) return;
+
+    const line = cell.querySelector(`.${TABLE_CELL_LINE_CLASS}`) || cell.querySelector("p");
+    const blot = line ? Parchment.find(line) : null;
+
+    if (blot) {
+      quill.setSelection(quill.getIndex(blot), 0, Quill.sources.SILENT);
+      quill.focus();
+      return;
+    }
+
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(cell);
+    range.collapse(true);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    quill.focus();
+  };
+
+  const getActiveTableCell = () => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return null;
+
+    const root = quill.root as HTMLElement;
+    const selection = window.getSelection();
+    const selectedNode = selection?.anchorNode;
+
+    if (selectedNode && root.contains(selectedNode)) {
+      const selectedElement = selectedNode.nodeType === Node.ELEMENT_NODE
+        ? selectedNode as Element
+        : selectedNode.parentElement;
+      const cell = selectedElement?.closest("td");
+      if (cell && root.contains(cell)) return cell as HTMLTableCellElement;
+    }
+
+    const range = quill.getSelection();
+    if (!range) return null;
+
+    const [leaf] = quill.getLeaf(range.index);
+    const leafNode = leaf?.domNode;
+    const leafElement = leafNode?.nodeType === Node.ELEMENT_NODE
+      ? leafNode as Element
+      : leafNode?.parentElement;
+    const cell = leafElement?.closest("td");
+
+    return cell && root.contains(cell) ? cell as HTMLTableCellElement : null;
+  };
+
+  const getTableTarget = () => {
+    const cell = getActiveTableCell();
+    if (!cell) {
+      toast.error("Place the cursor inside a table first.");
+      return null;
+    }
+
+    const row = cell.parentElement as HTMLTableRowElement | null;
+    const table = cell.closest("table") as HTMLTableElement | null;
+    if (!row || !table) return null;
+
+    return { cell, row, table };
+  };
+
+  const handleToolbarMouseDown = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
+
+  const insertTable = () => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    quill.focus();
+    const table = createTableElement();
+    const trailingParagraph = document.createElement("p");
+    trailingParagraph.appendChild(document.createElement("br"));
+    const range = quill.getSelection(true);
+    const [line] = range ? quill.getLine(range.index) : [null];
+    const root = quill.root as HTMLElement;
+    let referenceNode: Node | null = null;
+
+    if (line?.domNode) {
+      let node = line.domNode as HTMLElement;
+      const parentTable = node.closest("table");
+      if (parentTable && root.contains(parentTable)) {
+        referenceNode = parentTable;
+      } else {
+        while (node.parentElement && node.parentElement !== root) {
+          node = node.parentElement;
+        }
+        referenceNode = node;
+      }
+    }
+
+    if (referenceNode?.parentNode) {
+      referenceNode.parentNode.insertBefore(table, referenceNode.nextSibling);
+      table.parentNode?.insertBefore(trailingParagraph, table.nextSibling);
+    } else {
+      root.appendChild(table);
+      root.appendChild(trailingParagraph);
+    }
+
+    syncTableChange("Table inserted");
+    placeCursorInCell(table.querySelector("td"));
+  };
+
+  const addTableRow = () => {
+    const target = getTableTarget();
+    if (!target) return;
+
+    const newRow = document.createElement("tr");
+    Array.from(target.row.cells).forEach(() => {
+      newRow.appendChild(createEmptyTableCell());
+    });
+    target.row.after(newRow);
+
+    syncTableChange("Row added");
+    placeCursorInCell(newRow.cells[target.cell.cellIndex]);
+  };
+
+  const deleteTableRow = () => {
+    const target = getTableTarget();
+    if (!target) return;
+
+    const tbody = target.row.parentElement as HTMLTableSectionElement | null;
+    const rows = tbody ? Array.from(tbody.rows) : [];
+    if (rows.length <= 1) {
+      toast.error("Table must keep at least one row.");
+      return;
+    }
+
+    const rowIndex = rows.indexOf(target.row);
+    const columnIndex = target.cell.cellIndex;
+    const nextRow = rows[rowIndex + 1] || rows[rowIndex - 1];
+    target.row.remove();
+
+    syncTableChange("Row removed");
+    placeCursorInCell(nextRow?.cells[Math.min(columnIndex, nextRow.cells.length - 1)]);
+  };
+
+  const addTableColumn = () => {
+    const target = getTableTarget();
+    if (!target) return;
+
+    const columnIndex = target.cell.cellIndex;
+    const rows = Array.from(target.table.rows);
+
+    rows.forEach((row) => {
+      const newCell = createEmptyTableCell();
+      row.insertBefore(newCell, row.cells[columnIndex + 1] || null);
+    });
+
+    syncTableChange("Column added");
+    placeCursorInCell(target.row.cells[columnIndex + 1]);
+  };
+
+  const deleteTableColumn = () => {
+    const target = getTableTarget();
+    if (!target) return;
+
+    const rows = Array.from(target.table.rows);
+    const columnCount = target.row.cells.length;
+    if (columnCount <= 1) {
+      toast.error("Table must keep at least one column.");
+      return;
+    }
+
+    const columnIndex = target.cell.cellIndex;
+    rows.forEach((row) => {
+      row.cells[columnIndex]?.remove();
+    });
+
+    const nextColumnIndex = Math.min(columnIndex, columnCount - 2);
+    syncTableChange("Column removed");
+    placeCursorInCell(target.row.cells[nextColumnIndex]);
   };
 
   return (
@@ -184,6 +467,60 @@ export const TemplateEditor = forwardRef<TemplateEditorHandle, TemplateEditorPro
         </span>
         <span className="ql-formats">
           <button className="ql-image"></button>
+        </span>
+        <span className="ql-formats template-table-toolbar">
+          <button
+            type="button"
+            onMouseDown={handleToolbarMouseDown}
+            onClick={insertTable}
+            className="template-toolbar-button"
+            title="Insert Table"
+          >
+            <Table2 className="w-3.5 h-3.5" />
+            <span>Table</span>
+          </button>
+        </span>
+        <span className="ql-formats template-table-toolbar">
+          <button
+            type="button"
+            onMouseDown={handleToolbarMouseDown}
+            onClick={addTableRow}
+            className="template-toolbar-button"
+            title="Add Row"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Row</span>
+          </button>
+          <button
+            type="button"
+            onMouseDown={handleToolbarMouseDown}
+            onClick={addTableColumn}
+            className="template-toolbar-button"
+            title="Add Column"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Col</span>
+          </button>
+          <button
+            type="button"
+            onMouseDown={handleToolbarMouseDown}
+            onClick={deleteTableRow}
+            className="template-toolbar-button"
+            title="Remove Row"
+          >
+            <Minus className="w-3 h-3" />
+            <span>Row</span>
+          </button>
+          <button
+            type="button"
+            onMouseDown={handleToolbarMouseDown}
+            onClick={deleteTableColumn}
+            className="template-toolbar-button"
+            title="Remove Column"
+          >
+            <Minus className="w-3 h-3" />
+            <span>Col</span>
+          </button>
         </span>
 
         {/* Variable Usage Status Bar - New Section */}
@@ -371,6 +708,53 @@ export const TemplateEditor = forwardRef<TemplateEditorHandle, TemplateEditorPro
           border-right: none;
           border-bottom: none;
           min-height: 500px;
+        }
+        .quill-custom-container .template-table-toolbar {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 2px;
+        }
+        .quill-custom-container .template-toolbar-button {
+          width: auto !important;
+          min-width: auto !important;
+          height: 28px !important;
+          display: inline-flex !important;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          padding: 0 8px !important;
+          color: #334155;
+          font-size: 12px;
+          font-weight: 700;
+          line-height: 1;
+          border: 1px solid transparent;
+          border-radius: 6px;
+          transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+        }
+        .quill-custom-container .template-toolbar-button:hover {
+          color: #0f172a;
+          background-color: #e2e8f0;
+          border-color: #cbd5e1;
+        }
+        .quill-custom-container .template-toolbar-button svg {
+          flex: 0 0 auto;
+        }
+        .quill-custom-container .ql-editor table.${TABLE_CLASS} {
+          width: 100%;
+          table-layout: fixed;
+          border-collapse: collapse;
+          margin: 12px 0;
+        }
+        .quill-custom-container .ql-editor table.${TABLE_CLASS} td {
+          min-width: 80px;
+          min-height: 32px;
+          padding: 6px 8px;
+          vertical-align: top;
+          border: 1px solid #94a3b8;
+        }
+        .quill-custom-container .ql-editor table.${TABLE_CLASS} p {
+          margin: 0;
         }
       `}</style>
     </div>

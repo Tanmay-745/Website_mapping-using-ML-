@@ -4,11 +4,11 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { TemplateData, SavedTemplate } from "../App";
-import { FileText, Save, Mail, Printer, Edit3 } from "lucide-react";
+import { Download, FileText, Save, Mail, Printer, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import { TemplateEditor } from "./TemplateEditor";
 import { VariableSidePanel } from "./VariableSidePanel";
-import { generateNoticeContent, saveTemplateToFolder, analyzeTemplate, getNoticeTypes, translateText } from "../api";
+import { API_BASE, exportNoticesZip, generateNoticeContent, saveTemplateToFolder, analyzeTemplate, getNoticeTypes, translateText } from "../api";
 import {
   Select,
   SelectContent,
@@ -261,7 +261,7 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
       const matchedFile = localStorage.getItem('lastMatchedTemplate');
       if (matchedFile && !templateData.content) {
         try {
-          const response = await fetch(`http://localhost:54321/api/templates/file/${matchedFile}`);
+          const response = await fetch(`${API_BASE}/api/templates/file/${matchedFile}`);
           if (response.ok) {
             const text = await response.text();
             setContentMap(prev => ({
@@ -295,6 +295,7 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
 
   const [currentLanguage, setCurrentLanguage] = useState("English");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isExportingZip, setIsExportingZip] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const editorRef = useRef<any>(null);
 
@@ -472,6 +473,54 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
       toast.error(`Failed to generate PDF: ${e.message || "Unknown error"}`, { id: toastId });
     } finally {
       setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleExportNoticesZip = async () => {
+    if (!currentContent) {
+      toast.error("Please add template content before exporting.");
+      return;
+    }
+
+    setIsExportingZip(true);
+    const toastId = toast.loading("Generating DOCX/PDF notices from CSV data...");
+
+    try {
+      const rows = templateData.sampleData && templateData.sampleData.length > 0
+        ? templateData.sampleData
+        : [{}];
+      const barcodeField = templateData.csvHeaders?.find((header) => /barcode|loan|account|lan/i.test(header));
+      const filenamePrefix = `${templateData.noticeType || "notice"}_${currentLanguage}`.replace(/\s+/g, "_");
+
+      const blob = await exportNoticesZip({
+        content: fullPreviewContent,
+        rows,
+        filenamePrefix,
+        lender: templateData.lender,
+        noticeType: templateData.noticeType,
+        barcodeField,
+        signature: advocateDetails?.signature,
+        advocateDetails,
+        exportPdf: true,
+        mergePdf: true,
+        includeDocx: true,
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${filenamePrefix}_notices.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      toast.success(`Exported ${rows.length} notice${rows.length === 1 ? "" : "s"} successfully!`, { id: toastId });
+    } catch (e: any) {
+      console.error("Notice ZIP export failed:", e);
+      toast.error(`Export failed: ${e.message || "Unknown error"}`, { id: toastId });
+    } finally {
+      setIsExportingZip(false);
     }
   };
 
@@ -745,6 +794,14 @@ export function NoticePreview({ templateData, onStartNew }: NoticePreviewProps) 
         >
           <FileText className="w-4 h-4 mr-2" />
           {isGeneratingPdf ? "Generating..." : "Download as PDF"}
+        </Button>
+        <Button
+          onClick={handleExportNoticesZip}
+          variant="outline"
+          disabled={isExportingZip || !currentContent}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          {isExportingZip ? "Exporting..." : "Export DOCX/PDF ZIP"}
         </Button>
         <Button
           onClick={onStartNew}
